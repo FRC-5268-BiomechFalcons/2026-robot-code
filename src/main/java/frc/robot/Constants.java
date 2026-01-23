@@ -48,7 +48,7 @@ public final class Constants {
         public static final double kBackLeftChassisAngularOffset = Math.PI;
         public static final double kBackRightChassisAngularOffset = Math.PI / 2;
 
-        // SPARK MAX CAN IDs
+        // SPARK MAX DRIVETRAIN CAN IDs
         public static final int kFrontLeftDrivingCanId = 11;
         public static final int kRearLeftDrivingCanId = 13;
         public static final int kFrontRightDrivingCanId = 15;
@@ -106,5 +106,11 @@ public final class Constants {
     public static final class QuestConstants {
         public static final Transform3d ROBOT_TO_QUEST = new Transform3d(-0.0635, 0.2921, 0.0,
             new Rotation3d(0.0, 0.0, Units.degreesToRadians(-90)));
+    }
+
+    public static final class MotorConstants {
+        // SPARKMAX CAN IDs
+        public static final int kIntakeCanId = 20;
+        public static final int kShooterCanId = 21;
     }
 }

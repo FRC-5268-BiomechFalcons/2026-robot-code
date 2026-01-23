@@ -19,10 +19,18 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
+
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
+import frc.robot.Commands.Intake;
+import frc.robot.Commands.Shoot;
 
 
 /*
@@ -37,6 +45,10 @@ public class RobotContainer {
 
     // The driver's controller
     CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
+
+    // General Motors
+    SparkMax m_intakeMotor = new SparkMax(MotorConstants.kIntakeCanId, MotorType.kBrushless);
+    SparkMax m_shooterMotor = new SparkMax(MotorConstants.kShooterCanId, MotorType.kBrushless);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -75,6 +87,16 @@ public class RobotContainer {
         m_driverController.leftTrigger()
                 .onTrue(new RunCommand(() -> m_robotDrive.setSpeedModifier(0.5), m_robotDrive))
                 .onFalse(new RunCommand(() -> m_robotDrive.setSpeedModifier(1.0), m_robotDrive));
+
+        // Intake controls
+        m_driverController.a().whileTrue(new Intake(0.5, m_intakeMotor));
+
+        m_driverController.b().whileTrue(new Intake(-0.5, m_intakeMotor));
+
+        // Shooter controls
+        m_driverController.x().whileTrue(new Shoot(0.5, m_shooterMotor));
+
+        m_driverController.y().whileTrue(new Shoot(-0.5, m_shooterMotor));
     }
 
     /**
