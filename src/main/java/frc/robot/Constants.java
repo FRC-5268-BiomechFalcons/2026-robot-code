@@ -28,7 +28,7 @@ public final class Constants {
     public static final class DriveConstants {
         // Driving Parameters - Note that these are not the maximum capable speeds of
         // the robot, rather the allowed maximum speeds
-        public static final double kMaxSpeedMetersPerSecond = 1.2;
+        public static final double kMaxSpeedMetersPerSecond = .2;
         public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
         // Chassis configuration
@@ -112,5 +112,13 @@ public final class Constants {
         // SPARKMAX CAN IDs
         public static final int kIntakeCanId = 20;
         public static final int kShooterCanId = 21;
+    }
+
+    public static final class FieldConstants {
+        // All in Meters
+        public static final double kHubHeight = Units.inchesToMeters(72);
+        public static final double kHubDistanceFromAlliance = Units.inchesToMeters(158.6);
+        public static final double kHubDistanceLeftEdge = Units.inchesToMeters(138.65);
+        public static final double kHubDistanceRightEdge = Units.inchesToMeters(185.65);
     }
 }

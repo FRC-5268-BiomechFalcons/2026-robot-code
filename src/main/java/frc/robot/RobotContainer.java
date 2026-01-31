@@ -45,10 +45,15 @@ public class RobotContainer {
 
     // The driver's controller
     CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
+    private final SparkMax m_intakeMotor = new SparkMax(0, null);
+    private final SparkMax m_indexerMotor = new SparkMax(0, null);
+    private final SparkMax m_shooterMotor = new SparkMax(0, null);
 
     // General Motors
-    SparkMax m_intakeMotor = new SparkMax(MotorConstants.kIntakeCanId, MotorType.kBrushless);
-    SparkMax m_shooterMotor = new SparkMax(MotorConstants.kShooterCanId, MotorType.kBrushless);
+    /*
+     * SparkMax m_intakeMotor = new SparkMax(MotorConstants.kIntakeCanId, MotorType.kBrushless);
+     * SparkMax m_shooterMotor = new SparkMax(MotorConstants.kShooterCanId, MotorType.kBrushless);
+     */
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -88,15 +93,17 @@ public class RobotContainer {
                 .onTrue(new RunCommand(() -> m_robotDrive.setSpeedModifier(0.5), m_robotDrive))
                 .onFalse(new RunCommand(() -> m_robotDrive.setSpeedModifier(1.0), m_robotDrive));
 
+        m_driverController.rightBumper().whileTrue(new Intake(0.3, m_intakeMotor, m_indexerMotor));
         // Intake controls
-        m_driverController.a().whileTrue(new Intake(0.5, m_intakeMotor));
-
-        m_driverController.b().whileTrue(new Intake(-0.5, m_intakeMotor));
-
-        // Shooter controls
-        m_driverController.x().whileTrue(new Shoot(0.5, m_shooterMotor));
-
-        m_driverController.y().whileTrue(new Shoot(-0.5, m_shooterMotor));
+        /*
+         * m_driverController.a().whileTrue(new Intake(0.5, m_intakeMotor));
+         * 
+         * m_driverController.b().whileTrue(new Intake(-0.5, m_intakeMotor));
+         * 
+         * // Shooter controls m_driverController.x().whileTrue(new Shoot(0.5, m_shooterMotor));
+         * 
+         * m_driverController.y().whileTrue(new Shoot(-0.5, m_shooterMotor));
+         */
     }
 
     /**
