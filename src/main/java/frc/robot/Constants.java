@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -120,5 +121,18 @@ public final class Constants {
         public static final double kHubDistanceFromAlliance = Units.inchesToMeters(158.6);
         public static final double kHubDistanceLeftEdge = Units.inchesToMeters(138.65);
         public static final double kHubDistanceRightEdge = Units.inchesToMeters(185.65);
+        public static final Pose3d kHubTarget = new Pose3d(kHubDistanceFromAlliance + 20,
+            (kHubDistanceLeftEdge + kHubDistanceRightEdge) / 2, kHubHeight, new Rotation3d());
+
+        public static final double kFuelWeight = Units.lbsToKilograms(0.474); // Kg
+
     }
+
+    public static final class RobotConstants {
+        public static final double kShooterAngle = 70; //Degrees
+        public static final double kShooterRadius = 2; //Inches
+        public static final double kShooterVelocity = 4000; //RPM
+
+    }
+
 }

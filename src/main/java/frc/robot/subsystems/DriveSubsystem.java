@@ -56,6 +56,8 @@ public class DriveSubsystem extends SubsystemBase {
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
 
+    private Pose3d robotPose;
+
     /** Creates a new DriveSubsystem. */
     public DriveSubsystem() {
         // Usage reporting for MAXSwerve template
@@ -77,7 +79,7 @@ public class DriveSubsystem extends SubsystemBase {
 
             // Get the most recent Quest pose
             Pose3d questPose = poseFrames[poseFrames.length - 1].questPose3d();
-            Pose3d robotPose = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse());
+            robotPose = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse());
 
             // Logging
             SmartDashboard.putNumber("quest x", robotPose.getX());
@@ -207,4 +209,29 @@ public class DriveSubsystem extends SubsystemBase {
         // Clamp between 0.0 and 1.0
         m_speedModifier = Math.max(0.0, Math.min(1.0, modifier));
     }
+
+    public double getHubVectorAngle() {
+        double dx = Constants.FieldConstants.kHubTarget.getX() - robotPose.getX();
+        double dy = Constants.FieldConstants.kHubTarget.getY() - robotPose.getY();
+        return Math.toDegrees(Math.atan2(dy, dx));
+    }
+
+    public double findProjectileTrajectoryVelocity() {
+        double heightDifference = Constants.FieldConstants.kHubHeight;
+        double g = 9.81; // Acceleration due to gravity in m/s^2
+        double angleRadians = Math.toRadians(Constants.RobotConstants.kShooterAngle);
+        double d = Constants.FieldConstants.kHubTarget.getX() - robotPose.getX(); // Horizontal distance to target
+
+        // Using the projectile motion formula to calculate initial velocity
+        double numerator = g * d * d;
+        double denominator = 2 * (heightDifference - d * Math.tan(angleRadians)) *
+            Math.pow(Math.cos(angleRadians), 2);
+
+        if (denominator <= 0) {
+            return Double.NaN; // No valid solution
+        }
+
+        return Math.sqrt(numerator / denominator);
+    }
+
 }

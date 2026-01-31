@@ -27,12 +27,16 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
 
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-
+import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
+import frc.robot.Commands.Index;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
 
 
+// import c
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -45,15 +49,11 @@ public class RobotContainer {
 
     // The driver's controller
     CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
-    private final SparkMax m_intakeMotor = new SparkMax(0, null);
-    private final SparkMax m_indexerMotor = new SparkMax(0, null);
-    private final SparkMax m_shooterMotor = new SparkMax(0, null);
 
     // General Motors
-    /*
-     * SparkMax m_intakeMotor = new SparkMax(MotorConstants.kIntakeCanId, MotorType.kBrushless);
-     * SparkMax m_shooterMotor = new SparkMax(MotorConstants.kShooterCanId, MotorType.kBrushless);
-     */
+    private final SparkMax m_intakeMotor = new SparkMax(8, MotorType.kBrushless);
+    private final SparkMax m_indexerMotor = new SparkMax(9, MotorType.kBrushless);
+    private final TalonFX m_shooterMotor = new TalonFX(7);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -93,17 +93,17 @@ public class RobotContainer {
                 .onTrue(new RunCommand(() -> m_robotDrive.setSpeedModifier(0.5), m_robotDrive))
                 .onFalse(new RunCommand(() -> m_robotDrive.setSpeedModifier(1.0), m_robotDrive));
 
-        m_driverController.rightBumper().whileTrue(new Intake(0.3, m_intakeMotor, m_indexerMotor));
         // Intake controls
-        /*
-         * m_driverController.a().whileTrue(new Intake(0.5, m_intakeMotor));
-         * 
-         * m_driverController.b().whileTrue(new Intake(-0.5, m_intakeMotor));
-         * 
-         * // Shooter controls m_driverController.x().whileTrue(new Shoot(0.5, m_shooterMotor));
-         * 
-         * m_driverController.y().whileTrue(new Shoot(-0.5, m_shooterMotor));
-         */
+
+        m_driverController.rightBumper().whileTrue(new Intake(0.45, m_intakeMotor, m_indexerMotor));
+        m_driverController.leftBumper().whileTrue(new Intake(-0.45, m_intakeMotor, m_indexerMotor));
+
+        // Shooter controls 
+        m_driverController.x().whileTrue(new Shoot(0.5, m_shooterMotor));
+
+        m_driverController.y().whileTrue(new Shoot(-0.5, m_shooterMotor));
+        m_driverController.rightTrigger().whileTrue(new Index(-0.45, m_intakeMotor, m_indexerMotor));
+
     }
 
     /**
