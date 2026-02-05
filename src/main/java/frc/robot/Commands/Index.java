@@ -20,8 +20,8 @@ public class Index extends Command {
 
     @Override
     public void initialize() {
-        m_intakeMotor.set(-power);
-        m_indexerMotor.set(power);
+        m_intakeMotor.set(power);
+        m_indexerMotor.set(-power);
     }
 
     @Override

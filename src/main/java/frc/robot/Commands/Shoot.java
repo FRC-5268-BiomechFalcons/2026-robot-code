@@ -1,35 +1,36 @@
 package frc.robot.Commands;
 
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.DriveSubsystem;
-
-import java.util.ResourceBundle.Control;
-
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
 
 public class Shoot extends Command {
-    DriveSubsystem m_driveSubsystem;
-    TalonFX m_shooterMotor;
-    double power;
+    ShooterSubsystem m_shooter;
+    double goalRpm;
+    IntakeSubsystem m_intakeSubsystem;
+    double indexSpeed;
 
-    public Shoot(double power, TalonFX m_shooterMotor) {
-        this.power = power;
-        this.m_shooterMotor = m_shooterMotor;
+    public Shoot(ShooterSubsystem m_shooter, IntakeSubsystem m_intakeSubsystem, double goalRpm,
+            double indexSpeed) {
+        addRequirements(m_shooter);
+        this.m_shooter = m_shooter;
+        this.goalRpm = goalRpm;
+        this.m_intakeSubsystem = m_intakeSubsystem;
+        this.indexSpeed = indexSpeed;
 
     }
 
     @Override
     public void initialize() {
-        m_shooterMotor.set(power);
+        m_shooter.setSetpoint(goalRpm);
+        m_intakeSubsystem.index(indexSpeed);
     }
 
     @Override
     public void end(boolean interrupted) {
-        m_shooterMotor.set(0);
+        m_shooter.setSetpoint(0);
+        m_intakeSubsystem.stopMotors();
     }
 
 }

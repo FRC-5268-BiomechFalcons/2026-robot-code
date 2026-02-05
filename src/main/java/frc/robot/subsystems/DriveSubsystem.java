@@ -17,8 +17,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -44,7 +42,6 @@ public class DriveSubsystem extends SubsystemBase {
     // The gyro sensor
     private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
     private Field2d field = new Field2d();
-    private NetworkTable table = NetworkTableInstance.getDefault().getTable("DriveSubsystem");
     QuestNav questNav = new QuestNav();
 
     // Odometry class for tracking robot pose
