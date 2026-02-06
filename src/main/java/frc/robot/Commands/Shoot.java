@@ -24,7 +24,16 @@ public class Shoot extends Command {
     @Override
     public void initialize() {
         m_shooter.setSetpoint(goalRpm);
-        m_intakeSubsystem.index(indexSpeed);
+
+    }
+
+    @Override
+    public void execute() {
+        if (m_shooter.getCurrentRPM() >= goalRpm - 50) {
+            m_intakeSubsystem.index(indexSpeed);
+        } else {
+            m_intakeSubsystem.stopMotors();
+        }
     }
 
     @Override

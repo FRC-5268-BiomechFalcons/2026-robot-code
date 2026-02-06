@@ -131,7 +131,7 @@ public final class Constants {
     public static final class RobotConstants {
         public static final double kShooterAngle = 70; //Degrees
         public static final double kShooterRadius = 2; //Inches
-        public static final double kShooterVelocity = 4000; //RPM
+        public static final double kShooterVelocity = 3500; //RPM
 
     }
 

@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.Commands.Index;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
@@ -100,11 +101,13 @@ public class RobotContainer {
         m_driverController.leftBumper().whileTrue(new Intake(m_intake, -0.6));
 
         // Shooter controls 
-        m_driverController.x().whileTrue(new Shoot(m_shooter, m_intake, 3000, .6));
+        m_driverController.x().whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, .6));
 
-        m_driverController.y().whileTrue(new Shoot(m_shooter, m_intake, -3000, .6));
+        m_driverController.y()
+                .whileTrue(new Shoot(m_shooter, m_intake, -RobotConstants.kShooterVelocity, .6));
 
-        m_driverController.rightTrigger().whileTrue(new Shoot(m_shooter, m_intake, 3000, .6));
+        m_driverController.rightTrigger()
+                .whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, .6));
 
     }
 
