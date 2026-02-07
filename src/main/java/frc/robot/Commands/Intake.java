@@ -2,7 +2,6 @@ package frc.robot.Commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
-import com.revrobotics.spark.SparkMax;
 import frc.robot.subsystems.IntakeSubsystem;
 
 
