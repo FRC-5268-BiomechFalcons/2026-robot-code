@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -70,6 +71,7 @@ public class DriveSubsystem extends SubsystemBase {
 
         questNav.commandPeriodic();
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
+        CameraServer.startAutomaticCapture();
 
         if (poseFrames.length > 0) {
             SmartDashboard.putString("quest state", "quest available");
