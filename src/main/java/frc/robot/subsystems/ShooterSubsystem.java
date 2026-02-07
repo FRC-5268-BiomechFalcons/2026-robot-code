@@ -17,17 +17,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
     private TalonFX shooterMotor = new TalonFX(7);
-    // private PIDController closedLoopController = new PIDController(.035, 0, 0);
     private double goalRPM = 0;
     private Slot0Configs slot0Configs = new Slot0Configs();
-    private double kP = 0.1;
 
     public static final double MAX_RPM = 6000;
     public static final double MIN_RPM = 0;
 
     /** Creates a new Shooter. */
     public ShooterSubsystem() {
-        // closedLoopController.setTolerance(1);
         slot0Configs.kP = 2.2;
         slot0Configs.kI = 0;
         slot0Configs.kD = 0.002;
@@ -63,8 +60,6 @@ public class ShooterSubsystem extends SubsystemBase {
     private void updateDashboard() {
         SmartDashboard.putNumber("Shooter Motor RPM", getCurrentRPM());
         SmartDashboard.putNumber("Current Shooter Setpoint", goalRPM);
-        SmartDashboard.putNumber("Shooter kP", kP);
-        // kP = SmartDashboard.getNumber("Shooter kP", 0.1);
-        // System.out.println("Current Shooter kP: " + kP);
+        SmartDashboard.putString("Motor Temp", shooterMotor.getDeviceTemp().getValueAsDouble() + " ℃");
     }
 }

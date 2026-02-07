@@ -14,10 +14,10 @@ public class Shoot extends Command {
 
     public Shoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, double goalRpm,
             double indexSpeed) {
-        addRequirements(shooter);
+        addRequirements(shooter, intakeSubsystem);
         this.shooter = shooter;
-        this.goalRpm = goalRpm;
         this.intakeSubsystem = intakeSubsystem;
+        this.goalRpm = goalRpm;
         this.indexSpeed = indexSpeed;
     }
 
