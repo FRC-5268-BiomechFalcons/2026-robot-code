@@ -10,6 +10,7 @@ public class Shoot extends Command {
     double goalRpm;
     IntakeSubsystem m_intakeSubsystem;
     double indexSpeed;
+    boolean hitRPM;
 
     public Shoot(ShooterSubsystem m_shooter, IntakeSubsystem m_intakeSubsystem, double goalRpm,
             double indexSpeed) {
@@ -18,28 +19,28 @@ public class Shoot extends Command {
         this.goalRpm = goalRpm;
         this.m_intakeSubsystem = m_intakeSubsystem;
         this.indexSpeed = indexSpeed;
-
     }
 
     @Override
     public void initialize() {
         m_shooter.setSetpoint(goalRpm);
-
+        hitRPM = false;
     }
 
     @Override
     public void execute() {
-        if (m_shooter.getCurrentRPM() >= goalRpm - 50) {
+
+        if (m_shooter.getCurrentRPM() >= goalRpm - 25 && !hitRPM) {
             m_intakeSubsystem.index(indexSpeed);
-        } else {
-            m_intakeSubsystem.stopMotors();
+            hitRPM = true;
         }
     }
 
     @Override
     public void end(boolean interrupted) {
-        m_shooter.setSetpoint(0);
+        m_shooter.stopControl();
         m_intakeSubsystem.stopMotors();
+
     }
 
 }

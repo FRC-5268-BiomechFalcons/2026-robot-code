@@ -7,6 +7,9 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,25 +18,27 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
     private TalonFX m_shooterMotor = new TalonFX(7);
-    private PIDController m_closedLoopController = new PIDController(.08, 0, 0);
+    // private PIDController m_closedLoopController = new PIDController(.035, 0, 0);
     private double goalRPM = 0;
+    private Slot0Configs slot0Configs = new Slot0Configs();
+    private double kP = 0.1;
+
     public static final double MAX_RPM = 6000;
     public static final double MIN_RPM = 0;
 
     /** Creates a new Shooter. */
     public ShooterSubsystem() {
-        m_closedLoopController.setTolerance(1);
+        // m_closedLoopController.setTolerance(1);
+        slot0Configs.kP = 2.2;
+        slot0Configs.kI = 0;
+        slot0Configs.kD = 0.002;
+
+        m_shooterMotor.getConfigurator().apply(slot0Configs);
     }
 
     @Override
     public void periodic() {
         updateDashboard();
-        if (goalRPM != 0) {
-            double voltage = m_closedLoopController.calculate(getCurrentRPM());
-            m_shooterMotor.setVoltage(voltage);
-        } else {
-            m_shooterMotor.setVoltage(0);
-        }
     }
 
     public double getCurrentRPM() {
@@ -42,8 +47,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void setSetpoint(double goal) {
         double clampedGoal = clampRPM(goal);
-        m_closedLoopController.setSetpoint(clampedGoal);
+        double goalInRPS = clampedGoal / 60;
+        VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
+        m_shooterMotor.setControl(request.withVelocity(goalInRPS));
         this.goalRPM = clampedGoal;
+    }
+
+    public void stopControl() {
+        m_shooterMotor.setControl(new NeutralOut());
     }
 
     private double clampRPM(double goal) {
@@ -53,5 +64,8 @@ public class ShooterSubsystem extends SubsystemBase {
     public void updateDashboard() {
         SmartDashboard.putNumber("Shooter Motor RPM", getCurrentRPM());
         SmartDashboard.putNumber("Current Shooter Setpoint", goalRPM);
+        SmartDashboard.putNumber("Shooter kP", kP);
+        // kP = SmartDashboard.getNumber("Shooter kP", 0.1);
+        // System.out.println("Current Shooter kP: " + kP);
     }
 }

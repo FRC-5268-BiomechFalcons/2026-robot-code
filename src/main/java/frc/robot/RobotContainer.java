@@ -97,17 +97,16 @@ public class RobotContainer {
 
         // Intake controls
 
-        m_driverController.rightBumper().whileTrue(new Intake(m_intake, 0.6));
-        m_driverController.leftBumper().whileTrue(new Intake(m_intake, -0.6));
+        m_driverController.rightBumper().whileTrue(new Intake(m_intake, 1));
+        m_driverController.leftBumper().whileTrue(new Intake(m_intake, -1));
 
         // Shooter controls 
-        m_driverController.x().whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, .6));
+        m_driverController.x().whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, 1));
 
-        m_driverController.y()
-                .whileTrue(new Shoot(m_shooter, m_intake, -RobotConstants.kShooterVelocity, .6));
+        m_driverController.y().whileTrue(new Shoot(m_shooter, m_intake, -RobotConstants.kShooterVelocity, 1));
 
         m_driverController.rightTrigger()
-                .whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, .6));
+                .whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, .75));
 
     }
 
