@@ -6,10 +6,6 @@ package frc.robot;
 
 import java.util.List;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -20,18 +16,17 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.RobotConstants;
-import frc.robot.Commands.Index;
+import frc.robot.Commands.Climb;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
+import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -50,8 +45,12 @@ public class RobotContainer {
 
     // The driver's controller
     CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
+
+    // Subsystems
     ShooterSubsystem m_shooter = new ShooterSubsystem();
     IntakeSubsystem m_intake = new IntakeSubsystem();
+    ClimbSubsystem m_climb = new ClimbSubsystem();
+
     // General Motors
     // private final SparkMax m_intakeMotor = new SparkMax(8, MotorType.kBrushless);
     // private final SparkMax m_indexerMotor = new SparkMax(9, MotorType.kBrushless);
@@ -97,16 +96,17 @@ public class RobotContainer {
 
         // Intake controls
 
-        m_driverController.rightBumper().whileTrue(new Intake(m_intake, 1));
-        m_driverController.leftBumper().whileTrue(new Intake(m_intake, -1));
+        m_driverController.rightBumper().whileTrue(new Intake(m_intake, RobotConstants.kIntakeSpeed));
+        m_driverController.leftBumper().whileTrue(new Intake(m_intake, -RobotConstants.kIntakeSpeed));
 
         // Shooter controls 
-        m_driverController.x().whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, 1));
+        m_driverController.x().whileTrue(new Climb(m_climb, RobotConstants.kClimbSpeed));
 
-        m_driverController.y().whileTrue(new Shoot(m_shooter, m_intake, -RobotConstants.kShooterVelocity, 1));
+        m_driverController.y().whileTrue(new Shoot(m_shooter, m_intake, -RobotConstants.kShooterVelocity,
+            RobotConstants.kIndexingSpeed));
 
-        m_driverController.rightTrigger()
-                .whileTrue(new Shoot(m_shooter, m_intake, RobotConstants.kShooterVelocity, .75));
+        m_driverController.rightTrigger().whileTrue(new Shoot(m_shooter, m_intake,
+            RobotConstants.kShooterVelocity, RobotConstants.kShootingIndexSpeed));
 
     }
 

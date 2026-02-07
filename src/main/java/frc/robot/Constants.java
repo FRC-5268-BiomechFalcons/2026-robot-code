@@ -132,6 +132,10 @@ public final class Constants {
         public static final double kShooterAngle = 70; //Degrees
         public static final double kShooterRadius = 2; //Inches
         public static final double kShooterVelocity = 3500; //RPM
+        public static final double kIndexingSpeed = 1;
+        public static final double kShootingIndexSpeed = 0.75;
+        public static final double kClimbSpeed = 0.5;
+        public static final double kIntakeSpeed = 1;
 
     }
 

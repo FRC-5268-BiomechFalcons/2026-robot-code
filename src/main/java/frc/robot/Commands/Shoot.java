@@ -6,40 +6,40 @@ import frc.robot.subsystems.ShooterSubsystem;
 
 
 public class Shoot extends Command {
-    ShooterSubsystem m_shooter;
+    ShooterSubsystem shooter;
     double goalRpm;
-    IntakeSubsystem m_intakeSubsystem;
+    IntakeSubsystem intakeSubsystem;
     double indexSpeed;
     boolean hitRPM;
 
-    public Shoot(ShooterSubsystem m_shooter, IntakeSubsystem m_intakeSubsystem, double goalRpm,
+    public Shoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, double goalRpm,
             double indexSpeed) {
-        addRequirements(m_shooter);
-        this.m_shooter = m_shooter;
+        addRequirements(shooter);
+        this.shooter = shooter;
         this.goalRpm = goalRpm;
-        this.m_intakeSubsystem = m_intakeSubsystem;
+        this.intakeSubsystem = intakeSubsystem;
         this.indexSpeed = indexSpeed;
     }
 
     @Override
     public void initialize() {
-        m_shooter.setSetpoint(goalRpm);
+        shooter.setSetpoint(goalRpm);
         hitRPM = false;
     }
 
     @Override
     public void execute() {
 
-        if (m_shooter.getCurrentRPM() >= goalRpm - 25 && !hitRPM) {
-            m_intakeSubsystem.index(indexSpeed);
+        if (shooter.getCurrentRPM() >= goalRpm - 25 && !hitRPM) {
+            intakeSubsystem.index(indexSpeed);
             hitRPM = true;
         }
     }
 
     @Override
     public void end(boolean interrupted) {
-        m_shooter.stopControl();
-        m_intakeSubsystem.stopMotors();
+        shooter.stopControl();
+        intakeSubsystem.stopMotors();
 
     }
 

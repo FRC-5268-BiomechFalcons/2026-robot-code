@@ -13,8 +13,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class IntakeSubsystem extends SubsystemBase {
 
-    private final SparkMax m_intakeMotor = new SparkMax(8, MotorType.kBrushless);
-    private final SparkMax m_indexerMotor = new SparkMax(9, MotorType.kBrushless);
+    private final SparkMax intakeMotor = new SparkMax(8, MotorType.kBrushless);
+    private final SparkMax indexerMotor = new SparkMax(9, MotorType.kBrushless);
     private boolean isIntaking = false;
 
     /** Creates a new Intake. */
@@ -27,23 +27,23 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void intake(double speed) {
-        m_intakeMotor.set(speed);
-        m_indexerMotor.set(speed);
+        intakeMotor.set(speed);
+        indexerMotor.set(speed);
         isIntaking = true;
     }
 
     public void index(double speed) {
-        m_intakeMotor.set(speed);
-        m_indexerMotor.set(-speed);
+        intakeMotor.set(speed);
+        indexerMotor.set(-speed);
     }
 
     public void stopMotors() {
-        m_indexerMotor.set(0);
-        m_intakeMotor.set(0);
+        indexerMotor.set(0);
+        intakeMotor.set(0);
         isIntaking = false;
     }
 
-    public void updateDashboard(boolean isIntaking) {
+    private void updateDashboard(boolean isIntaking) {
         SmartDashboard.putBoolean("Intaking?", isIntaking);
     }
 }
