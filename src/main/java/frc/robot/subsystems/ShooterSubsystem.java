@@ -18,12 +18,12 @@ import frc.robot.Constants.RobotConstants;
 
 
 public class ShooterSubsystem extends SubsystemBase {
-    private TalonFX shooterMotor = new TalonFX(7);
-    private double goalRPM = 0;
-    private Slot0Configs slot0Configs = new Slot0Configs();
-
     public static final double MAX_RPM = 6000;
     public static final double MIN_RPM = 0;
+
+    private final TalonFX shooterMotor = new TalonFX(7);
+    private double goalRPM = 0;
+    private Slot0Configs slot0Configs = new Slot0Configs();
 
     /** Creates a new Shooter. */
     public ShooterSubsystem() {
