@@ -11,8 +11,10 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.RobotConstants;
 
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -25,9 +27,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
     /** Creates a new Shooter. */
     public ShooterSubsystem() {
-        slot0Configs.kP = 2.2;
-        slot0Configs.kI = 0;
-        slot0Configs.kD = 0.002;
+        slot0Configs.kP = RobotConstants.shooterkP;
+        slot0Configs.kI = RobotConstants.shooterkI;
+        slot0Configs.kD = RobotConstants.shooterkD;
 
         shooterMotor.getConfigurator().apply(slot0Configs);
     }
@@ -42,7 +44,8 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setSetpoint(double goal) {
-        double clampedGoal = clampRPM(goal);
+        // double clampedGoal = clampRPM(goal);
+        double clampedGoal = MathUtil.clamp(goal, MIN_RPM, MAX_RPM);
         double goalInRPS = clampedGoal / 60;
         VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
         shooterMotor.setControl(request.withVelocity(goalInRPS));
@@ -53,13 +56,17 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor.setControl(new NeutralOut());
     }
 
-    private double clampRPM(double goal) {
-        return Math.max(MIN_RPM, Math.min(MAX_RPM, goal));
+    public boolean hitRPMSetpoint(double goal) {
+        return getCurrentRPM() >= goal - 50;
     }
+
+    // private double clampRPM(double goal) {
+    //     return Math.max(MIN_RPM, Math.min(MAX_RPM, goal));
+    // }
 
     private void updateDashboard() {
         SmartDashboard.putNumber("Shooter Motor RPM", getCurrentRPM());
         SmartDashboard.putNumber("Current Shooter Setpoint", goalRPM);
-        SmartDashboard.putString("Motor Temp", shooterMotor.getDeviceTemp().getValueAsDouble() + " ℃");
+        SmartDashboard.putString("Motor Temp", shooterMotor.getDeviceTemp().getValueAsDouble() + " °C");
     }
 }

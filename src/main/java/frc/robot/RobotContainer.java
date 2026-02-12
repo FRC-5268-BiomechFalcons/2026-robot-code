@@ -32,7 +32,6 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
 
-// import c
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -50,11 +49,6 @@ public class RobotContainer {
     ShooterSubsystem shooter = new ShooterSubsystem();
     IntakeSubsystem intake = new IntakeSubsystem();
     ClimbSubsystem climb = new ClimbSubsystem();
-
-    // General Motors
-    // private final SparkMax intakeMotor = new SparkMax(8, MotorType.kBrushless);
-    // private final SparkMax indexerMotor = new SparkMax(9, MotorType.kBrushless);
-    // private final TalonFX shooterMotor = new TalonFX(7);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -98,9 +92,9 @@ public class RobotContainer {
         driverController.rightBumper().whileTrue(new Intake(intake, RobotConstants.kIntakeSpeed));
         driverController.leftBumper().whileTrue(new Intake(intake, -RobotConstants.kIntakeSpeed));
 
-        // Shooter controls 
         driverController.x().whileTrue(new Climb(climb, RobotConstants.kClimbSpeed));
 
+        // Shooter controls 
         driverController.y().whileTrue(
                 new Shoot(shooter, intake, -RobotConstants.kShooterVelocity, RobotConstants.kIndexingSpeed));
 

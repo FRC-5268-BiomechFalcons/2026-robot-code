@@ -30,7 +30,7 @@ public class Shoot extends Command {
     @Override
     public void execute() {
 
-        if (shooter.getCurrentRPM() >= goalRpm - 25 && !hitRPM) {
+        if (shooter.hitRPMSetpoint(goalRpm) && !hitRPM) {
             intakeSubsystem.index(indexSpeed);
             hitRPM = true;
         }
