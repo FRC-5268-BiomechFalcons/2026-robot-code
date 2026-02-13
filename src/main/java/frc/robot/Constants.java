@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -28,7 +29,7 @@ public final class Constants {
     public static final class DriveConstants {
         // Driving Parameters - Note that these are not the maximum capable speeds of
         // the robot, rather the allowed maximum speeds
-        public static final double kMaxSpeedMetersPerSecond = 1.2;
+        public static final double kMaxSpeedMetersPerSecond = .2;
         public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
         // Chassis configuration
@@ -113,4 +114,34 @@ public final class Constants {
         public static final int kIntakeCanId = 20;
         public static final int kShooterCanId = 21;
     }
+
+    public static final class FieldConstants {
+        // All in Meters
+        public static final double kHubHeight = Units.inchesToMeters(72);
+        public static final double kHubDistanceFromAlliance = Units.inchesToMeters(158.6);
+        public static final double kHubDistanceLeftEdge = Units.inchesToMeters(138.65);
+        public static final double kHubDistanceRightEdge = Units.inchesToMeters(185.65);
+        public static final Pose3d kHubTarget = new Pose3d(kHubDistanceFromAlliance + 20,
+            (kHubDistanceLeftEdge + kHubDistanceRightEdge) / 2, kHubHeight, new Rotation3d());
+
+        public static final double kFuelWeight = Units.lbsToKilograms(0.474); // Kg
+
+    }
+
+    public static final class RobotConstants {
+        public static final double kShooterAngle = 70; //Degrees
+        public static final double kShooterRadius = 2; //Inches
+        public static final double kShooterVelocity = 3500; //RPM
+        public static final double kIndexingSpeed = 1;
+        public static final double kShootingIndexSpeed = 0.75;
+        public static final double kClimbSpeed = 0.5;
+        public static final double kIntakeSpeed = 1;
+
+        // Shooter PID Constants
+        public static final double shooterkP = 2.2;
+        public static final double shooterkI = 0.0;
+        public static final double shooterkD = 0.002;
+
+    }
+
 }

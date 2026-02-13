@@ -19,18 +19,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.OIConstants;
-import frc.robot.subsystems.DriveSubsystem;
-
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-
+import frc.robot.Constants.RobotConstants;
+import frc.robot.Commands.Climb;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
+import frc.robot.subsystems.ClimbSubsystem;
+import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
 
 /*
@@ -41,14 +40,15 @@ import frc.robot.Commands.Shoot;
  */
 public class RobotContainer {
     // The robot's subsystems
-    private final DriveSubsystem m_robotDrive = new DriveSubsystem();
+    private final DriveSubsystem robotDrive = new DriveSubsystem();
 
     // The driver's controller
-    CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
+    CommandXboxController driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
 
-    // General Motors
-    SparkMax m_intakeMotor = new SparkMax(MotorConstants.kIntakeCanId, MotorType.kBrushless);
-    SparkMax m_shooterMotor = new SparkMax(MotorConstants.kShooterCanId, MotorType.kBrushless);
+    // Subsystems
+    ShooterSubsystem shooter = new ShooterSubsystem();
+    IntakeSubsystem intake = new IntakeSubsystem();
+    ClimbSubsystem climb = new ClimbSubsystem();
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -58,18 +58,18 @@ public class RobotContainer {
         configureButtonBindings();
 
         // Configure default commands
-        m_robotDrive.setDefaultCommand(
+        robotDrive.setDefaultCommand(
                 // The left stick controls translation of the robot.
                 // Turning is controlled by the X axis of the right stick.
-                new RunCommand(() -> m_robotDrive.drive(
-                        -MathUtil.applyDeadband(Math.pow(m_driverController.getLeftY(), 3),
+                new RunCommand(() -> robotDrive.drive(
+                        -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
                                 OIConstants.kDriveDeadband),
-                        -MathUtil.applyDeadband(Math.pow(m_driverController.getLeftX(), 3),
+                        -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
                                 OIConstants.kDriveDeadband),
-                        -MathUtil.applyDeadband(Math.pow(m_driverController.getRightX(), 3),
+                        -MathUtil.applyDeadband(Math.pow(driverController.getRightX(), 3),
                                 OIConstants.kDriveDeadband),
                         true),
-                    m_robotDrive));
+                    robotDrive));
     }
 
     /*
@@ -80,23 +80,27 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         // Zero the heading when the right stick is pressed
-        m_driverController.rightStick()
-                .onTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
+        driverController.rightStick().onTrue(new RunCommand(() -> robotDrive.zeroHeading(), robotDrive));
 
         // Reduce the speed of the robot when the left trigger is held
-        m_driverController.leftTrigger()
-                .onTrue(new RunCommand(() -> m_robotDrive.setSpeedModifier(0.5), m_robotDrive))
-                .onFalse(new RunCommand(() -> m_robotDrive.setSpeedModifier(1.0), m_robotDrive));
+        driverController.leftTrigger()
+                .onTrue(new RunCommand(() -> robotDrive.setSpeedModifier(0.5), robotDrive))
+                .onFalse(new RunCommand(() -> robotDrive.setSpeedModifier(1.0), robotDrive));
 
         // Intake controls
-        m_driverController.a().whileTrue(new Intake(0.5, m_intakeMotor));
 
-        m_driverController.b().whileTrue(new Intake(-0.5, m_intakeMotor));
+        driverController.rightBumper().whileTrue(new Intake(intake, RobotConstants.kIntakeSpeed));
+        driverController.leftBumper().whileTrue(new Intake(intake, -RobotConstants.kIntakeSpeed));
 
-        // Shooter controls
-        m_driverController.x().whileTrue(new Shoot(0.5, m_shooterMotor));
+        driverController.x().whileTrue(new Climb(climb, RobotConstants.kClimbSpeed));
 
-        m_driverController.y().whileTrue(new Shoot(-0.5, m_shooterMotor));
+        // Shooter controls 
+        driverController.y().whileTrue(
+                new Shoot(shooter, intake, -RobotConstants.kShooterVelocity, RobotConstants.kIndexingSpeed));
+
+        driverController.rightTrigger().whileTrue(new Shoot(shooter, intake, RobotConstants.kShooterVelocity,
+            RobotConstants.kShootingIndexSpeed));
+
     }
 
     /**
@@ -125,18 +129,18 @@ public class RobotContainer {
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(exampleTrajectory,
-            m_robotDrive::getPose, // Functional interface to feed supplier
+            robotDrive::getPose, // Functional interface to feed supplier
             DriveConstants.kDriveKinematics,
 
             // Position controllers
             new PIDController(AutoConstants.kPXController, 0, 0),
             new PIDController(AutoConstants.kPYController, 0, 0), thetaController,
-            m_robotDrive::setModuleStates, m_robotDrive);
+            robotDrive::setModuleStates, robotDrive);
 
         // Reset odometry to the starting pose of the trajectory.
-        m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
+        robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
         // Run path following command, then stop at the end.
-        return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+        return swerveControllerCommand.andThen(() -> robotDrive.drive(0, 0, 0, false));
     }
 }

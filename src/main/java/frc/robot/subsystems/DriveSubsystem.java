@@ -17,8 +17,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -43,8 +41,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     // The gyro sensor
     private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
+
+    // Pigeon IMU
+    // private final Pigeon2 m_gyro = new Pigeon2(0);
+
     private Field2d field = new Field2d();
-    private NetworkTable table = NetworkTableInstance.getDefault().getTable("DriveSubsystem");
     QuestNav questNav = new QuestNav();
 
     // Odometry class for tracking robot pose
@@ -53,8 +54,16 @@ public class DriveSubsystem extends SubsystemBase {
         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                 m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
+    // Pigeon IMU
+    // SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
+    //     Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+    //     new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+    //             m_rearLeft.getPosition(), m_rearRight.getPosition() });
+
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
+
+    private Pose3d robotPose;
 
     /** Creates a new DriveSubsystem. */
     public DriveSubsystem() {
@@ -69,6 +78,11 @@ public class DriveSubsystem extends SubsystemBase {
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
+        // PIGEON IMU
+        // m_odometry.update(Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+        //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+        //                 m_rearLeft.getPosition(), m_rearRight.getPosition() });
+
         questNav.commandPeriodic();
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 
@@ -77,7 +91,7 @@ public class DriveSubsystem extends SubsystemBase {
 
             // Get the most recent Quest pose
             Pose3d questPose = poseFrames[poseFrames.length - 1].questPose3d();
-            Pose3d robotPose = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse());
+            robotPose = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse());
 
             // Logging
             SmartDashboard.putNumber("quest x", robotPose.getX());
@@ -108,10 +122,17 @@ public class DriveSubsystem extends SubsystemBase {
      * @param pose The pose to which to set the odometry.
      */
     public void resetOdometry(Pose2d pose) {
+
         m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() },
                 pose);
+
+        // Pigeon IMU
+        // m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+        //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+        //                 m_rearLeft.getPosition(), m_rearRight.getPosition() },
+        //         pose);
 
         Pose3d pose3d = new Pose3d(pose);
         questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
@@ -142,6 +163,19 @@ public class DriveSubsystem extends SubsystemBase {
         m_frontRight.setDesiredState(swerveModuleStates[1]);
         m_rearLeft.setDesiredState(swerveModuleStates[2]);
         m_rearRight.setDesiredState(swerveModuleStates[3]);
+
+        // PIGEON IMU
+        // var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
+        //         ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
+        //                 Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()))
+        //         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
+        // SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
+        //         DriveConstants.kMaxSpeedMetersPerSecond);
+        // m_frontLeft.setDesiredState(swerveModuleStates[0]);
+        // m_frontRight.setDesiredState(swerveModuleStates[1]);
+        // m_rearLeft.setDesiredState(swerveModuleStates[2]);
+        // m_rearRight.setDesiredState(swerveModuleStates[3]);
+
     }
 
     /**
@@ -187,6 +221,10 @@ public class DriveSubsystem extends SubsystemBase {
      */
     public double getHeading() {
         return Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)).getDegrees();
+
+        // PIGEON IMU
+        // return Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()).getDegrees();
+
     }
 
     /**
@@ -196,6 +234,9 @@ public class DriveSubsystem extends SubsystemBase {
      */
     public double getTurnRate() {
         return m_gyro.getRate(IMUAxis.kZ) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+
+        // PIGEON IMU
+        // return 0.0;
     }
 
     /**
@@ -207,4 +248,29 @@ public class DriveSubsystem extends SubsystemBase {
         // Clamp between 0.0 and 1.0
         m_speedModifier = Math.max(0.0, Math.min(1.0, modifier));
     }
+
+    public double getHubVectorAngle() {
+        double dx = Constants.FieldConstants.kHubTarget.getX() - robotPose.getX();
+        double dy = Constants.FieldConstants.kHubTarget.getY() - robotPose.getY();
+        return Math.toDegrees(Math.atan2(dy, dx));
+    }
+
+    public double findProjectileTrajectoryVelocity() {
+        double heightDifference = Constants.FieldConstants.kHubHeight;
+        double g = 9.81; // Acceleration due to gravity in m/s^2
+        double angleRadians = Math.toRadians(Constants.RobotConstants.kShooterAngle);
+        double d = Constants.FieldConstants.kHubTarget.getX() - robotPose.getX(); // Horizontal distance to target
+
+        // Using the projectile motion formula to calculate initial velocity
+        double numerator = g * d * d;
+        double denominator = 2 * (heightDifference - d * Math.tan(angleRadians)) *
+            Math.pow(Math.cos(angleRadians), 2);
+
+        if (denominator <= 0) {
+            return Double.NaN; // No valid solution
+        }
+
+        return Math.sqrt(numerator / denominator);
+    }
+
 }

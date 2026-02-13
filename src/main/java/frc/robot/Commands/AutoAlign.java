@@ -10,18 +10,18 @@ import frc.robot.subsystems.Limelight;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class AutoAlign extends Command {
     Pose3d targetPose;
-    DriveSubsystem m_driveSubsystem;
+    DriveSubsystem driveSubsystem;
     PIDController xController;
     Limelight limelight;
     boolean isLeft;
     int mode;
     long startTime;
 
-    public AutoAlign(Limelight limelight, DriveSubsystem m_driveSubsystem, boolean isLeft) {
-        this.m_driveSubsystem = m_driveSubsystem;
+    public AutoAlign(Limelight limelight, DriveSubsystem driveSubsystem, boolean isLeft) {
+        this.driveSubsystem = driveSubsystem;
         this.limelight = limelight;
         this.isLeft = isLeft;
-        addRequirements(m_driveSubsystem, limelight);
+        addRequirements(driveSubsystem, limelight);
         if (isLeft) {
             xController = new PIDController(0.014, 0, 0.001);
         } else {
@@ -60,10 +60,10 @@ public class AutoAlign extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        m_driveSubsystem.drive(0, 0, 0, false);
+        driveSubsystem.drive(0, 0, 0, false);
         System.out.println("AutoAlign command finished");
-        System.out.println("current x " + m_driveSubsystem.getPose().getX());
-        System.out.println("current y " + m_driveSubsystem.getPose().getY());
+        System.out.println("current x " + driveSubsystem.getPose().getX());
+        System.out.println("current y " + driveSubsystem.getPose().getY());
     }
 
 }

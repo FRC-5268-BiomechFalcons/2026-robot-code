@@ -1,29 +1,28 @@
 package frc.robot.Commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.DriveSubsystem;
 
-import com.revrobotics.spark.SparkMax;
+import frc.robot.subsystems.IntakeSubsystem;
 
 
 public class Intake extends Command {
-    DriveSubsystem m_driveSubsystem;
-    SparkMax m_intakeMotor;
-    double power;
+    IntakeSubsystem intakeSubsystem;
+    double speed;
 
-    public Intake(double power, SparkMax m_intakeMotor) {
-        this.power = power;
-        this.m_intakeMotor = m_intakeMotor;
+    public Intake(IntakeSubsystem intakeSubsystem, double speed) {
+        addRequirements(intakeSubsystem);
+        this.intakeSubsystem = intakeSubsystem;
+        this.speed = speed;
     }
 
     @Override
     public void initialize() {
-        m_intakeMotor.set(power);
+        intakeSubsystem.intake(speed);
     }
 
     @Override
     public void end(boolean interrupted) {
-        m_intakeMotor.set(0);
+        intakeSubsystem.stopMotors();
     }
 
 }
