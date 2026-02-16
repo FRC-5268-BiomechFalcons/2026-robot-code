@@ -10,6 +10,7 @@ public class Intake extends Command {
     double speed;
 
     public Intake(IntakeSubsystem intakeSubsystem, double speed) {
+        addRequirements(intakeSubsystem);
         this.intakeSubsystem = intakeSubsystem;
         this.speed = speed;
     }

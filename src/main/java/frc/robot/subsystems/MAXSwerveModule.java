@@ -54,9 +54,9 @@ public class MAXSwerveModule {
         m_turningEncoder = m_turningSpark.getAbsoluteEncoder();
 
         // m_drivingClosedLoopController = m_drivingSpark.getClosedLoopController();
-        m_driveConfigs.kP = 1.0;
-        m_driveConfigs.kI = 0.0;
-        m_driveConfigs.kD = 0.0;
+        m_driveConfigs.kP = ModuleConstants.kPKrakenDrive;
+        m_driveConfigs.kI = ModuleConstants.kIKrakenDrive;
+        m_driveConfigs.kD = ModuleConstants.kDKrakenDrive;
 
         m_drivingTalon.getConfigurator().apply(m_driveConfigs);
         m_turningClosedLoopController = m_turningSpark.getClosedLoopController();
@@ -80,16 +80,11 @@ public class MAXSwerveModule {
      * @return The current state of the module.
      */
     public SwerveModuleState getState() {
-        // Apply chassis angular offset to the encoder position to get the position
-        // relative to the chassis.
+        double motorRps = m_drivingTalon.getVelocity().getValueAsDouble();
+        double wheelRps = motorRps / ModuleConstants.kKrakenDriveGearRatio;
+        double mps = wheelRps * ModuleConstants.kWheelCircumferenceMeters;
 
-        double currentRPS = m_drivingTalon.getVelocity().getValueAsDouble();
-
-        double gearRatio = 10.0;
-        double linearVelocity = (currentRPS * ModuleConstants.kWheelCircumferenceMeters) / gearRatio;
-
-        return new SwerveModuleState(linearVelocity,
-            new Rotation2d(m_turningEncoder.getPosition() - m_chassisAngularOffset));
+        return new SwerveModuleState(mps, getTurningAngle());
     }
 
     /**
@@ -98,10 +93,8 @@ public class MAXSwerveModule {
      * @return The current position of the module.
      */
     public SwerveModulePosition getPosition() {
-        // Apply chassis angular offset to the encoder position to get the position
-        // relative to the chassis.
-        return new SwerveModulePosition(m_drivingTalon.getPosition().getValueAsDouble(),
-            new Rotation2d(m_turningEncoder.getPosition() - m_chassisAngularOffset));
+        double motorRot = m_drivingTalon.getPosition().getValueAsDouble();
+        return new SwerveModulePosition(motorRotToMeters(motorRot), getTurningAngle());
     }
 
     /**
@@ -110,23 +103,15 @@ public class MAXSwerveModule {
      * @param desiredState Desired state with speed and angle.
      */
     public void setDesiredState(SwerveModuleState desiredState) {
-        // Apply chassis angular offset to the desired state.
-        SwerveModuleState correctedDesiredState = new SwerveModuleState();
-        correctedDesiredState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
-        correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(m_chassisAngularOffset));
+        SwerveModuleState corrected = new SwerveModuleState(desiredState.speedMetersPerSecond,
+            desiredState.angle.plus(Rotation2d.fromRadians(m_chassisAngularOffset)));
 
-        // Optimize the reference state to avoid spinning further than 90 degrees.
-        correctedDesiredState.optimize(new Rotation2d(m_turningEncoder.getPosition()));
-
-        // Command driving and turning SPARKS towards their respective setpoints.
-        // m_drivingClosedLoopController.setControl(correctedDesiredState.speedMetersPerSecond,
-        //         ControlType.kVelocity);
+        corrected.optimize(Rotation2d.fromRadians(m_turningEncoder.getPosition()));
 
         VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
-        m_drivingTalon.setControl(request.withVelocity(correctedDesiredState.speedMetersPerSecond));
+        m_drivingTalon.setControl(request.withVelocity(mpsToMotorRps(corrected.speedMetersPerSecond)));
 
-        m_turningClosedLoopController.setSetpoint(correctedDesiredState.angle.getRadians(),
-                ControlType.kPosition);
+        m_turningClosedLoopController.setSetpoint(corrected.angle.getRadians(), ControlType.kPosition);
 
         m_desiredState = desiredState;
     }
@@ -134,5 +119,20 @@ public class MAXSwerveModule {
     /** Zeroes all the SwerveModule encoders. */
     public void resetEncoders() {
         m_drivingTalon.setPosition(0);
+    }
+
+    private double mpsToMotorRps(double mps) {
+        double wheelRps = mps / ModuleConstants.kWheelCircumferenceMeters;
+        return wheelRps * ModuleConstants.kKrakenDriveGearRatio;
+    }
+
+    private double motorRotToMeters(double motorRot) {
+        double wheelRot = motorRot / ModuleConstants.kKrakenDriveGearRatio;
+        return wheelRot * ModuleConstants.kWheelCircumferenceMeters;
+    }
+
+    private Rotation2d getTurningAngle() {
+        return Rotation2d.fromRadians(m_turningEncoder.getPosition())
+                .minus(Rotation2d.fromRadians(m_chassisAngularOffset));
     }
 }

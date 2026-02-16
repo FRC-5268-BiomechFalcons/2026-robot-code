@@ -14,10 +14,10 @@ public class Shoot extends Command {
 
     public Shoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, double goalRpm,
             double indexSpeed) {
-        addRequirements(shooter);
+        addRequirements(shooter, intakeSubsystem);
         this.shooter = shooter;
-        this.goalRpm = goalRpm;
         this.intakeSubsystem = intakeSubsystem;
+        this.goalRpm = goalRpm;
         this.indexSpeed = indexSpeed;
     }
 
@@ -30,7 +30,7 @@ public class Shoot extends Command {
     @Override
     public void execute() {
 
-        if (shooter.getCurrentRPM() >= goalRpm - 25 && !hitRPM) {
+        if (shooter.hitRPMSetpoint(goalRpm) && !hitRPM) {
             intakeSubsystem.index(indexSpeed);
             hitRPM = true;
         }

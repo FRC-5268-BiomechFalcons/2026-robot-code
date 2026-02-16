@@ -78,6 +78,8 @@ public final class Constants {
         public static final double kDrivingMotorReduction = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15);
         public static final double kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps *
             kWheelCircumferenceMeters) / kDrivingMotorReduction;
+
+        public static final double kKrakenDriveGearRatio = 10.0;
     }
 
     public static final class OIConstants {
@@ -136,6 +138,11 @@ public final class Constants {
         public static final double kShootingIndexSpeed = 0.75;
         public static final double kClimbSpeed = 0.5;
         public static final double kIntakeSpeed = 1;
+
+        // Shooter PID Constants
+        public static final double shooterkP = 2.2;
+        public static final double shooterkI = 0.0;
+        public static final double shooterkD = 0.002;
 
     }
 
