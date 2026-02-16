@@ -70,6 +70,9 @@ public class DriveSubsystem extends SubsystemBase {
     public DriveSubsystem() {
         // Usage reporting for MAXSwerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
+
+        CameraServer.startAutomaticCapture();
+
     }
 
     @Override
@@ -86,7 +89,6 @@ public class DriveSubsystem extends SubsystemBase {
 
         questNav.commandPeriodic();
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
-        CameraServer.startAutomaticCapture();
 
         if (poseFrames.length > 0) {
             SmartDashboard.putString("quest state", "quest available");

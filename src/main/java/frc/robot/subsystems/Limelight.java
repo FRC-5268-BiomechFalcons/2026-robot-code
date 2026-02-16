@@ -35,6 +35,7 @@ public class Limelight extends SubsystemBase {
         return new Pose2d();
     }
 
+    // This was for FRC 2025 to align directly in front of the apriltag.
     public Pose2d getTargetPose() {
         if (aprilTagId != -1) {
             Translation2d finalTranslation;
