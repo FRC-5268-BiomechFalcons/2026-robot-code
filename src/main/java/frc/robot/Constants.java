@@ -80,6 +80,11 @@ public final class Constants {
             kWheelCircumferenceMeters) / kDrivingMotorReduction;
 
         public static final double kKrakenDriveGearRatio = 10.0;
+
+        // Drive motor PID constants
+        public static final double kPKrakenDrive = 1.0;
+        public static final double kIKrakenDrive = 0.0;
+        public static final double kDKrakenDrive = 0.0;
     }
 
     public static final class OIConstants {
