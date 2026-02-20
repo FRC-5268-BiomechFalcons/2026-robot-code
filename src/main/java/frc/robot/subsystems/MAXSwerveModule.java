@@ -23,15 +23,14 @@ import frc.robot.Constants.ModuleConstants;
 
 
 public class MAXSwerveModule {
-    // private final SparkMax m_drivingSpark;
+
+    // Drive Motors - Kraken
     private final TalonFX m_drivingTalon;
     private final Slot0Configs m_driveConfigs = new Slot0Configs();
+
+    // Turn Motors - NEO
     private final SparkMax m_turningSpark;
-
-    // private final RelativeEncoder m_drivingEncoder;
     private final AbsoluteEncoder m_turningEncoder;
-
-    // private final SparkClosedLoopController m_drivingClosedLoopController;
     private final SparkClosedLoopController m_turningClosedLoopController;
 
     private double m_chassisAngularOffset = 0;
@@ -40,32 +39,27 @@ public class MAXSwerveModule {
     /**
      * Constructs a MAXSwerveModule and configures the driving and turning motor,
      * encoder, and PID controller. This configuration is specific to the REV
-     * MAXSwerve Module built with NEOs, SPARKS MAX, and a Through Bore
+     * MAXSwerve Module built with NEO turn motors with SPARK MAXes, Kraken drive motors through TalonFX, and a Through Bore
      * Encoder.
      */
     public MAXSwerveModule(int drivingCANId, int turningCANId, double chassisAngularOffset) {
-        // m_drivingSpark = new SparkMax(drivingCANId, MotorType.kBrushless);
         m_drivingTalon = new TalonFX(drivingCANId);
 
         m_turningSpark = new SparkMax(turningCANId, MotorType.kBrushless);
-
-        // m_drivingEncoder = m_drivingSpark.getEncoder();
-
         m_turningEncoder = m_turningSpark.getAbsoluteEncoder();
 
-        // m_drivingClosedLoopController = m_drivingSpark.getClosedLoopController();
+        // Assigning PID Constants for the Kraken Drive motors, then applying them to the Kraken motor using Slot0Configs.
         m_driveConfigs.kP = ModuleConstants.kPKrakenDrive;
         m_driveConfigs.kI = ModuleConstants.kIKrakenDrive;
         m_driveConfigs.kD = ModuleConstants.kDKrakenDrive;
-
         m_drivingTalon.getConfigurator().apply(m_driveConfigs);
+
+        // Configuring the NEO turn motors.
         m_turningClosedLoopController = m_turningSpark.getClosedLoopController();
 
         // Apply the respective configurations to the SPARKS. Reset parameters before
         // applying the configuration to bring the SPARK to a known good state. Persist
-        // the settings to the SPARK to avoid losing them on a power cycle.
-        // m_drivingSpark.configure(Configs.MAXSwerveModule.drivingConfig, ResetMode.kResetSafeParameters,
-        //         PersistMode.kPersistParameters);
+        // the settings to the SPARK to avoid losing them on a power cycle. This is applied only to the turning motor.
         m_turningSpark.configure(Configs.MAXSwerveModule.turningConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
 
@@ -103,16 +97,23 @@ public class MAXSwerveModule {
      * @param desiredState Desired state with speed and angle.
      */
     public void setDesiredState(SwerveModuleState desiredState) {
+        // Apply chassis angular offset to the desired state.
         SwerveModuleState corrected = new SwerveModuleState(desiredState.speedMetersPerSecond,
             desiredState.angle.plus(Rotation2d.fromRadians(m_chassisAngularOffset)));
 
+        // Optimize the reference state to avoid spinning further than 90 degrees.
         corrected.optimize(Rotation2d.fromRadians(m_turningEncoder.getPosition()));
 
+        // Create a velocity control request for the drive motor. This is essentially the goal velocity we want the wheel to drive at.
         VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
+
+        // Set the motor's internal controller to drive at the goal velocity speed.
         m_drivingTalon.setControl(request.withVelocity(mpsToMotorRps(corrected.speedMetersPerSecond)));
 
+        // Use position control to command the turning motor to go to the desired angle.
         m_turningClosedLoopController.setSetpoint(corrected.angle.getRadians(), ControlType.kPosition);
 
+        // Store the desired state for debugging purposes.
         m_desiredState = desiredState;
     }
 

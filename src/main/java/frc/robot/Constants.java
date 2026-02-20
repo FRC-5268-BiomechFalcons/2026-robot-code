@@ -79,7 +79,12 @@ public final class Constants {
         public static final double kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps *
             kWheelCircumferenceMeters) / kDrivingMotorReduction;
 
-        public static final double kKrakenDriveGearRatio = 10.0;
+        public static final double kKrakenDriveGearRatio = 4.71;
+
+        // KRAKEN DRIVE MOTOR PID CONSTANTS
+        public static final double kPKrakenDrive = 1.0;
+        public static final double kIKrakenDrive = 0.0;
+        public static final double kDKrakenDrive = 0.0;
     }
 
     public static final class OIConstants {
