@@ -43,7 +43,7 @@ public class ShootHub extends Command {
         double rot = rotController.calculate(driveSubsystem.getHeading());
         driveSubsystem.drive(0, 0, rot, false);
 
-        if (shooter.getCurrentRPM() >= goalRpm - 25 && rotController.atSetpoint()) {
+        if (shooter.hitRPMSetpoint(goalRpm) && rotController.atSetpoint()) {
             intakeSubsystem.index(indexSpeed);
         } else {
             intakeSubsystem.stopMotors();

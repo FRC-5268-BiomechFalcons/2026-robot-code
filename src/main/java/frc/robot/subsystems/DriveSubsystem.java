@@ -41,6 +41,10 @@ public class DriveSubsystem extends SubsystemBase {
 
     // The gyro sensor
     private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
+
+    // Pigeon IMU
+    // private final Pigeon2 m_gyro = new Pigeon2(0);
+
     private Field2d field = new Field2d();
     QuestNav questNav = new QuestNav();
 
@@ -49,6 +53,12 @@ public class DriveSubsystem extends SubsystemBase {
         Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                 m_rearLeft.getPosition(), m_rearRight.getPosition() });
+
+    // Pigeon IMU
+    // SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
+    //     Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+    //     new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+    //             m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
@@ -68,6 +78,11 @@ public class DriveSubsystem extends SubsystemBase {
         m_odometry.update(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
+
+        // PIGEON IMU
+        // m_odometry.update(Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+        //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+        //                 m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
         questNav.commandPeriodic();
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
@@ -108,10 +123,17 @@ public class DriveSubsystem extends SubsystemBase {
      * @param pose The pose to which to set the odometry.
      */
     public void resetOdometry(Pose2d pose) {
+
         m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() },
                 pose);
+
+        // Pigeon IMU
+        // m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+        //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+        //                 m_rearLeft.getPosition(), m_rearRight.getPosition() },
+        //         pose);
 
         Pose3d pose3d = new Pose3d(pose);
         questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
@@ -142,6 +164,19 @@ public class DriveSubsystem extends SubsystemBase {
         m_frontRight.setDesiredState(swerveModuleStates[1]);
         m_rearLeft.setDesiredState(swerveModuleStates[2]);
         m_rearRight.setDesiredState(swerveModuleStates[3]);
+
+        // PIGEON IMU
+        // var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
+        //         ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
+        //                 Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()))
+        //         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
+        // SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
+        //         DriveConstants.kMaxSpeedMetersPerSecond);
+        // m_frontLeft.setDesiredState(swerveModuleStates[0]);
+        // m_frontRight.setDesiredState(swerveModuleStates[1]);
+        // m_rearLeft.setDesiredState(swerveModuleStates[2]);
+        // m_rearRight.setDesiredState(swerveModuleStates[3]);
+
     }
 
     /**
@@ -187,6 +222,10 @@ public class DriveSubsystem extends SubsystemBase {
      */
     public double getHeading() {
         return Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)).getDegrees();
+
+        // PIGEON IMU
+        // return Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()).getDegrees();
+
     }
 
     /**
@@ -196,6 +235,9 @@ public class DriveSubsystem extends SubsystemBase {
      */
     public double getTurnRate() {
         return m_gyro.getRate(IMUAxis.kZ) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+
+        // PIGEON IMU
+        // return 0.0;
     }
 
     /**

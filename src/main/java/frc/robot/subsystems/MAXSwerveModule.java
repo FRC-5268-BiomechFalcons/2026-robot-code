@@ -122,11 +122,13 @@ public class MAXSwerveModule {
         m_drivingTalon.setPosition(0);
     }
 
+    /** Converts m/s to motor rot/s */
     private double mpsToMotorRps(double mps) {
         double wheelRps = mps / ModuleConstants.kWheelCircumferenceMeters;
         return wheelRps * ModuleConstants.kKrakenDriveGearRatio;
     }
 
+    /**  */
     private double motorRotToMeters(double motorRot) {
         double wheelRot = motorRot / ModuleConstants.kKrakenDriveGearRatio;
         return wheelRot * ModuleConstants.kWheelCircumferenceMeters;
