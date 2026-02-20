@@ -12,6 +12,7 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
@@ -69,6 +70,7 @@ public class DriveSubsystem extends SubsystemBase {
     public DriveSubsystem() {
         // Usage reporting for MAXSwerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
+        SmartDashboard.putData("Field", field);
     }
 
     @Override
@@ -87,24 +89,24 @@ public class DriveSubsystem extends SubsystemBase {
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 
         if (poseFrames.length > 0) {
-            SmartDashboard.putString("quest state", "quest available");
+            SmartDashboard.putBoolean("Quest connected?", true);
 
             // Get the most recent Quest pose
             Pose3d questPose = poseFrames[poseFrames.length - 1].questPose3d();
             robotPose = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse());
 
             // Logging
-            SmartDashboard.putNumber("quest x", robotPose.getX());
-            SmartDashboard.putNumber("quest y", robotPose.getY());
-            SmartDashboard.putNumber("quest theta", robotPose.getRotation().getMeasureZ().in(Degrees));
+            SmartDashboard.putNumber("Quest x", robotPose.getX());
+            SmartDashboard.putNumber("Quest y", robotPose.getY());
+            field.setRobotPose(new Pose2d(new Translation2d(robotPose.getX(), robotPose.getY()),
+                new Rotation2d(robotPose.getRotation().getMeasureZ().in(Degrees))));
+            SmartDashboard.putNumber("Quest theta", robotPose.getRotation().getMeasureZ().in(Degrees));
 
             m_odometry.resetPose(robotPose.toPose2d());
         } else {
-            SmartDashboard.putString("quest state", "no quest");
+            SmartDashboard.putBoolean("Quest connected?", false);
         }
-        field.setRobotPose(getPose());
-        SmartDashboard.putNumber("heading", getHeading());
-        SmartDashboard.putData("Field", field);
+
     }
 
     /**

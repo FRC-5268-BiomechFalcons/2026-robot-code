@@ -26,6 +26,7 @@ import frc.robot.Constants.RobotConstants;
 import frc.robot.Commands.Climb;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
+import frc.robot.Commands.UpdatePose;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -100,6 +101,9 @@ public class RobotContainer {
 
         driverController.rightTrigger().whileTrue(new Shoot(shooter, intake, RobotConstants.kShooterVelocity,
             RobotConstants.kShootingIndexSpeed));
+
+        driverController.a()
+                .onTrue(new UpdatePose(robotDrive, new Pose2d(new Translation2d(2.5, 4), new Rotation2d())));
 
     }
 

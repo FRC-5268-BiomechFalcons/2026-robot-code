@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Unit;
 
 
 /**
@@ -105,8 +106,9 @@ public final class Constants {
     }
 
     public static final class QuestConstants {
-        public static final Transform3d ROBOT_TO_QUEST = new Transform3d(-0.0635, 0.2921, 0.0,
-            new Rotation3d(0.0, 0.0, Units.degreesToRadians(-90)));
+        public static final Transform3d ROBOT_TO_QUEST = new Transform3d(Units.inchesToMeters(10.5),
+            Units.inchesToMeters(10), Units.inchesToMeters(15.4),
+            new Rotation3d(Units.degreesToRadians(90), 0.0, 0.0));
     }
 
     public static final class MotorConstants {
@@ -138,9 +140,11 @@ public final class Constants {
         public static final double kIntakeSpeed = 1;
 
         // Shooter PID Constants
-        public static final double shooterkP = 2.2;
-        public static final double shooterkI = 0.0;
-        public static final double shooterkD = 0.002;
+        public static final double shooterkP = 1.5;
+        public static final double shooterkI = 0;
+        public static final double shooterkD = 0.0;
+        public static final double shooterkS = 0.1;
+        public static final double shooterkV = 0.12;
 
     }
 
