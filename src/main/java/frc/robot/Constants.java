@@ -149,11 +149,6 @@ public final class Constants {
         public static final double shooterkI = 0.0;
         public static final double shooterkD = 0.002;
 
-        // Shooter PID Constants
-        public static final double shooterkP = 2.2;
-        public static final double shooterkI = 0.0;
-        public static final double shooterkD = 0.002;
-
     }
 
 }
