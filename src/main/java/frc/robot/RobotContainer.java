@@ -26,6 +26,7 @@ import frc.robot.Constants.RobotConstants;
 import frc.robot.Commands.Climb;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
+import frc.robot.Commands.UpdateCarnivalRPM;
 import frc.robot.Commands.UpdatePose;
 import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
@@ -84,9 +85,9 @@ public class RobotContainer {
         driverController.rightStick().onTrue(new RunCommand(() -> robotDrive.zeroHeading(), robotDrive));
 
         // Reduce the speed of the robot when the left trigger is held
-        driverController.leftTrigger()
-                .onTrue(new RunCommand(() -> robotDrive.setSpeedModifier(0.5), robotDrive))
-                .onFalse(new RunCommand(() -> robotDrive.setSpeedModifier(1.0), robotDrive));
+        // driverController.leftTrigger()
+        //         .onTrue(new RunCommand(() -> robotDrive.setSpeedModifier(0.5), robotDrive))
+        //         .onFalse(new RunCommand(() -> robotDrive.setSpeedModifier(1.0), robotDrive));
 
         // Intake controls
 
@@ -104,6 +105,9 @@ public class RobotContainer {
 
         driverController.a()
                 .onTrue(new UpdatePose(robotDrive, new Pose2d(new Translation2d(2.5, 4), new Rotation2d())));
+
+        driverController.pov(0).onTrue(new UpdateCarnivalRPM(shooter, true));
+        driverController.pov(180).onTrue(new UpdateCarnivalRPM(shooter, false));
 
     }
 

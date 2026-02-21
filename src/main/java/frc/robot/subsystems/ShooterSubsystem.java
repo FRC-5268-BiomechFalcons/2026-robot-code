@@ -21,14 +21,15 @@ public class ShooterSubsystem extends SubsystemBase {
     public static final double MAX_RPM = 6000;
     public static final double MIN_RPM = 0;
 
+    private double carnivalRPM = 3500;
     private final TalonFX shooterMotor = new TalonFX(7);
     private double goalRPM = 0;
     private Slot0Configs slot0Configs = new Slot0Configs();
 
     /** Creates a new Shooter. */
     public ShooterSubsystem() {
-        slot0Configs.kS = 0.1;
-        slot0Configs.kV = 0.12;
+        slot0Configs.kS = RobotConstants.shooterkS;
+        slot0Configs.kV = RobotConstants.shooterkV;
         slot0Configs.kP = RobotConstants.shooterkP;
         slot0Configs.kI = RobotConstants.shooterkI;
         slot0Configs.kD = RobotConstants.shooterkD;
@@ -47,11 +48,21 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void setSetpoint(double goal) {
         // double clampedGoal = clampRPM(goal);
-        double clampedGoal = MathUtil.clamp(goal, MIN_RPM, MAX_RPM);
+        // double clampedGoal = MathUtil.clamp(goal, MIN_RPM, MAX_RPM);
+        double clampedGoal = MathUtil.clamp(carnivalRPM, MIN_RPM, MAX_RPM);
         double goalInRPS = clampedGoal / 60;
+
         VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
         shooterMotor.setControl(request.withVelocity(goalInRPS));
         this.goalRPM = clampedGoal;
+    }
+
+    public void updateCarnivalRPM(double newRPM) {
+        this.carnivalRPM = newRPM;
+    }
+
+    public double getCarnivalRPM() {
+        return carnivalRPM;
     }
 
     public void stopControl() {
@@ -70,5 +81,6 @@ public class ShooterSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Shooter Motor RPM", getCurrentRPM());
         SmartDashboard.putNumber("Current Shooter Setpoint", goalRPM);
         SmartDashboard.putString("Motor Temp", shooterMotor.getDeviceTemp().getValueAsDouble() + "°C");
+        SmartDashboard.putNumber("Carnival RPM", carnivalRPM);
     }
 }
