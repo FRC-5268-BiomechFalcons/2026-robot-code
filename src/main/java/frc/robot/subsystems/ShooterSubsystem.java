@@ -27,6 +27,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
     /** Creates a new Shooter. */
     public ShooterSubsystem() {
+        slot0Configs.kS = RobotConstants.shooterkS;
+        slot0Configs.kV = RobotConstants.shooterkV;
         slot0Configs.kP = RobotConstants.shooterkP;
         slot0Configs.kI = RobotConstants.shooterkI;
         slot0Configs.kD = RobotConstants.shooterkD;

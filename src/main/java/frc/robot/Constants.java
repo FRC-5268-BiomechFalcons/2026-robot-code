@@ -105,6 +105,9 @@ public final class Constants {
         // Constraint for the motion profiled robot angle controller
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
             kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+
+        // Robot Auto
+        public static final double kAutoClimbSpeed = 0.2;
     }
 
     public static final class NeoMotorConstants {
@@ -141,13 +144,15 @@ public final class Constants {
         public static final double kShooterVelocity = 3500; //RPM
         public static final double kIndexingSpeed = 1;
         public static final double kShootingIndexSpeed = 0.75;
-        public static final double kClimbSpeed = 0.1;
+        public static final double kClimbSpeed = 0.5;
         public static final double kIntakeSpeed = 1;
 
         // Shooter PID Constants
-        public static final double shooterkP = 2.2;
+        public static final double shooterkS = 0.1;
+        public static final double shooterkV = 0.12;
+        public static final double shooterkP = 1.5;
         public static final double shooterkI = 0.0;
-        public static final double shooterkD = 0.002;
+        public static final double shooterkD = 0.0;
 
     }
 

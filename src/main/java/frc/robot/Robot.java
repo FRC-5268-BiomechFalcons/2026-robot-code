@@ -5,8 +5,9 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
-
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -22,6 +23,9 @@ public class Robot extends TimedRobot {
 
     private RobotContainer robotContainer;
 
+    // Autonomous Chooser
+    private final SendableChooser<Command> autoChooser = new SendableChooser<>();
+
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -30,11 +34,18 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         // Set the ctre logger to log to the first flashdrive plugged in
         SignalLogger.setPath("/media/sda1/");
+
         // Explicitly start the logger
         SignalLogger.start();
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
+
+        autoChooser.addOption("Drive Straight", robotContainer.driveStraightAuto());
+        autoChooser.addOption("Shoot Preload Then Climb", robotContainer.shootThenClimbAuto());
+        autoChooser.addOption("Shoot Preload", robotContainer.shootPreloadAuto());
+
+        SmartDashboard.putData(autoChooser);
     }
 
     /**
@@ -68,7 +79,7 @@ public class Robot extends TimedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
-        autonomousCommand = robotContainer.getAutonomousCommand();
+        CommandScheduler.getInstance().schedule(autoChooser.getSelected());
 
         /*
          * String autoSelected = SmartDashboard.getString("Auto Selector", "Default");
@@ -77,9 +88,9 @@ public class Robot extends TimedRobot {
          */
 
         // schedule the autonomous command (example)
-        if (autonomousCommand != null) {
-            CommandScheduler.getInstance().schedule(autonomousCommand);
-        }
+        // if (autonomousCommand != null) {
+        //     CommandScheduler.getInstance().schedule(autonomousCommand);
+        // }
     }
 
     /** This function is called periodically during autonomous. */

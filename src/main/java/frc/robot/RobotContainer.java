@@ -6,6 +6,9 @@ package frc.robot;
 
 import java.util.List;
 
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -15,7 +18,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -71,6 +76,16 @@ public class RobotContainer {
                                 OIConstants.kDriveDeadband),
                         true),
                     robotDrive));
+
+        registerAutonomousCommands();
+    }
+
+    private void registerAutonomousCommands() {
+        NamedCommands.registerCommand("Shoot Preload", new Shoot(shooter, intake,
+            RobotConstants.kShooterVelocity, RobotConstants.kShootingIndexSpeed).withTimeout(5));
+
+        NamedCommands.registerCommand("Climb",
+                new Climb(climb, AutoConstants.kAutoClimbSpeed).withTimeout(3));
     }
 
     /*
@@ -85,7 +100,7 @@ public class RobotContainer {
 
         // Reduce the speed of the robot when the left trigger is held
         driverController.leftTrigger()
-                .onTrue(new InstantCommand(() -> robotDrive.setSpeedModifier(0.5), robotDrive))
+                .onTrue(new InstantCommand(() -> robotDrive.setSpeedModifier(0.75), robotDrive))
                 .onFalse(new InstantCommand(() -> robotDrive.setSpeedModifier(1.0), robotDrive));
 
         // Intake controls
@@ -103,6 +118,33 @@ public class RobotContainer {
         driverController.rightTrigger().whileTrue(new Shoot(shooter, intake, RobotConstants.kShooterVelocity,
             RobotConstants.kShootingIndexSpeed));
 
+    }
+
+    public Command driveStraightAuto() {
+        try {
+            return new PathPlannerAuto("Drive Straight");
+        } catch (Exception e) {
+            System.out.println("Error " + e);
+            return Commands.none();
+        }
+    }
+
+    public Command shootPreloadAuto() {
+        try {
+            return new PathPlannerAuto("Shoot Preload");
+        } catch (Exception e) {
+            System.out.println("Error " + e);
+            return Commands.none();
+        }
+    }
+
+    public Command shootThenClimbAuto() {
+        try {
+            return new PathPlannerAuto("Shoot Preload Then Climb");
+        } catch (Exception e) {
+            System.out.println("Error " + e);
+            return Commands.none();
+        }
     }
 
     /**

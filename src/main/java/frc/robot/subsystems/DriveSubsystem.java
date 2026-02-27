@@ -6,6 +6,13 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import com.ctre.phoenix.sensors.PigeonIMU;
+import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -19,6 +26,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -40,50 +48,51 @@ public class DriveSubsystem extends SubsystemBase {
         DriveConstants.kRearRightTurningCanId, DriveConstants.kBackRightChassisAngularOffset);
 
     // The gyro sensor
-    private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
+    // private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
 
     // Pigeon IMU
-    // private final Pigeon2 m_gyro = new Pigeon2(0);
+    private final PigeonIMU m_gyro = new PigeonIMU(25);
 
     private Field2d field = new Field2d();
     QuestNav questNav = new QuestNav();
 
     // Odometry class for tracking robot pose
-    SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
-        Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-        new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-                m_rearLeft.getPosition(), m_rearRight.getPosition() });
-
-    // Pigeon IMU
     // SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
-    //     Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+    //     Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
     //     new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
     //             m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
+    // Odometry class for tracking robot pose
+    SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
+        Rotation2d.fromDegrees(m_gyro.getYaw()), new SwerveModulePosition[] { m_frontLeft.getPosition(),
+                m_frontRight.getPosition(), m_rearLeft.getPosition(), m_rearRight.getPosition() });
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
 
-    private Pose3d robotPose;
+    private Pose3d robotPose = new Pose3d();
 
     /** Creates a new DriveSubsystem. */
     public DriveSubsystem() {
         // Usage reporting for MAXSwerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
-
+        AutoBuilder.configure(this::getPose, this::resetOdometry, this::getRobotRelativeSpeeds,
+                (speeds, feedsforwards) -> drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond,
+                        speeds.omegaRadiansPerSecond, false),
+                new PPHolonomicDriveController(new PIDConstants(10, 0.0, 0.0), new PIDConstants(7, 0.0, 0.0)),
+                getRobotConfig(), this::shouldFlipPath, this);
     }
 
     @Override
     public void periodic() {
         // Update the odometry in the periodic block
-        m_odometry.update(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-                new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-                        m_rearLeft.getPosition(), m_rearRight.getPosition() });
-
-        // PIGEON IMU
-        // m_odometry.update(Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+        // m_odometry.update(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
         //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
         //                 m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
+        // Update the odometry in the periodic block
+        m_odometry.update(Rotation2d.fromDegrees(m_gyro.getYaw()),
+                new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+                        m_rearLeft.getPosition(), m_rearRight.getPosition() });
         questNav.commandPeriodic();
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 
@@ -106,6 +115,30 @@ public class DriveSubsystem extends SubsystemBase {
         field.setRobotPose(getPose());
         SmartDashboard.putNumber("heading", getHeading());
         SmartDashboard.putData("Field", field);
+        SmartDashboard.putNumber("Driving Velocity", m_frontRight.getKrakenVelocity());
+    }
+
+    public RobotConfig getRobotConfig() {
+        try {
+            return RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public boolean shouldFlipPath() {
+        var alliance = DriverStation.getAlliance();
+        if (alliance.get() == DriverStation.Alliance.Red) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+        return DriveConstants.kDriveKinematics.toChassisSpeeds(m_frontLeft.getState(),
+                m_frontRight.getState(), m_rearLeft.getState(), m_rearRight.getState());
     }
 
     /**
@@ -124,16 +157,16 @@ public class DriveSubsystem extends SubsystemBase {
      */
     public void resetOdometry(Pose2d pose) {
 
-        m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-                new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-                        m_rearLeft.getPosition(), m_rearRight.getPosition() },
-                pose);
-
-        // Pigeon IMU
-        // m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()),
+        // m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
         //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
         //                 m_rearLeft.getPosition(), m_rearRight.getPosition() },
         //         pose);
+
+        // Pigeon IMU
+        m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw()),
+                new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+                        m_rearLeft.getPosition(), m_rearRight.getPosition() },
+                pose);
 
         Pose3d pose3d = new Pose3d(pose);
         questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
@@ -154,21 +187,9 @@ public class DriveSubsystem extends SubsystemBase {
         double ySpeedDelivered = ySpeed * m_speedModifier * DriveConstants.kMaxSpeedMetersPerSecond;
         double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
 
-        var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
-                ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                        Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)))
-                : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
-        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
-                DriveConstants.kMaxSpeedMetersPerSecond);
-        m_frontLeft.setDesiredState(swerveModuleStates[0]);
-        m_frontRight.setDesiredState(swerveModuleStates[1]);
-        m_rearLeft.setDesiredState(swerveModuleStates[2]);
-        m_rearRight.setDesiredState(swerveModuleStates[3]);
-
-        // PIGEON IMU
         // var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
         //         ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-        //                 Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()))
+        //                 Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)))
         //         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
         // SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
         //         DriveConstants.kMaxSpeedMetersPerSecond);
@@ -176,6 +197,18 @@ public class DriveSubsystem extends SubsystemBase {
         // m_frontRight.setDesiredState(swerveModuleStates[1]);
         // m_rearLeft.setDesiredState(swerveModuleStates[2]);
         // m_rearRight.setDesiredState(swerveModuleStates[3]);
+
+        // PIGEON IMU
+        var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
+                ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
+                        Rotation2d.fromDegrees(m_gyro.getYaw()))
+                : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
+                DriveConstants.kMaxSpeedMetersPerSecond);
+        m_frontLeft.setDesiredState(swerveModuleStates[0]);
+        m_frontRight.setDesiredState(swerveModuleStates[1]);
+        m_rearLeft.setDesiredState(swerveModuleStates[2]);
+        m_rearRight.setDesiredState(swerveModuleStates[3]);
 
     }
 
@@ -212,7 +245,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     /** Zeroes the heading of the robot. */
     public void zeroHeading() {
-        m_gyro.reset();
+        m_gyro.setYaw(0);
     }
 
     /**
@@ -221,11 +254,10 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the robot's heading in degrees, from -180 to 180
      */
     public double getHeading() {
-        return Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)).getDegrees();
+        // return Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)).getDegrees();
 
         // PIGEON IMU
-        // return Rotation2d.fromDegrees(m_gyro.getYaw().getValueAsDouble()).getDegrees();
-
+        return Rotation2d.fromDegrees(m_gyro.getYaw()).getDegrees();
     }
 
     /**
@@ -234,10 +266,10 @@ public class DriveSubsystem extends SubsystemBase {
      * @return The turn rate of the robot, in degrees per second
      */
     public double getTurnRate() {
-        return m_gyro.getRate(IMUAxis.kZ) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
-
-        // PIGEON IMU
-        // return 0.0;
+        // return m_gyro.getRate(IMUAxis.kZ) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+        double[] ypr = new double[3];
+        m_gyro.getRawGyro(ypr);
+        return ypr[0] * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
     }
 
     /**

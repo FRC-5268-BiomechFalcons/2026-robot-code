@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -91,6 +93,10 @@ public class MAXSwerveModule {
         return new SwerveModulePosition(motorRotToMeters(motorRot), getTurningAngle());
     }
 
+    public double getKrakenVelocity() {
+        return m_drivingTalon.getVelocity().getValueAsDouble() * (ModuleConstants.kWheelDiameterMeters / 2);
+    }
+
     /**
      * Sets the desired state for the module.
      *
@@ -107,7 +113,7 @@ public class MAXSwerveModule {
         // Create a velocity control request for the drive motor. This is essentially the goal velocity we want the wheel to drive at.
         VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
 
-        System.out.println(mpsToMotorRps(corrected.speedMetersPerSecond));
+        // System.out.println(mpsToMotorRps(corrected.speedMetersPerSecond));
 
         // Set the motor's internal controller to drive at the goal velocity speed.
         m_drivingTalon.setControl(request.withVelocity(mpsToMotorRps(corrected.speedMetersPerSecond)));
