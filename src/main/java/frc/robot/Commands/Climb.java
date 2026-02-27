@@ -17,6 +17,7 @@ public class Climb extends Command {
     public Climb(ClimbSubsystem climbSubsystem, double speed) {
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(climbSubsystem);
+        this.climbSubsystem = climbSubsystem;
         this.speed = speed;
     }
 

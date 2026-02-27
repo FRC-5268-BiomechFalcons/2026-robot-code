@@ -69,6 +69,7 @@ public class DriveSubsystem extends SubsystemBase {
     public DriveSubsystem() {
         // Usage reporting for MAXSwerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
+
     }
 
     @Override

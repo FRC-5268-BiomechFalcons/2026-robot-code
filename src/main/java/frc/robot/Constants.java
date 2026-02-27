@@ -29,7 +29,7 @@ public final class Constants {
     public static final class DriveConstants {
         // Driving Parameters - Note that these are not the maximum capable speeds of
         // the robot, rather the allowed maximum speeds
-        public static final double kMaxSpeedMetersPerSecond = .2;
+        public static final double kMaxSpeedMetersPerSecond = 4;
         public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
         // Chassis configuration
@@ -49,7 +49,7 @@ public final class Constants {
         public static final double kBackLeftChassisAngularOffset = Math.PI;
         public static final double kBackRightChassisAngularOffset = Math.PI / 2;
 
-        // SPARK MAX DRIVETRAIN CAN IDs
+        //  DRIVETRAIN CAN IDs
         public static final int kFrontLeftDrivingCanId = 11;
         public static final int kRearLeftDrivingCanId = 13;
         public static final int kFrontRightDrivingCanId = 15;
@@ -78,6 +78,13 @@ public final class Constants {
         public static final double kDrivingMotorReduction = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15);
         public static final double kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps *
             kWheelCircumferenceMeters) / kDrivingMotorReduction;
+
+        public static final double kKrakenDriveGearRatio = 4.71;
+
+        // KRAKEN DRIVE MOTOR PID CONSTANTS
+        public static final double kPKrakenDrive = 0.15;
+        public static final double kIKrakenDrive = 0.0;
+        public static final double kDKrakenDrive = 0.0;
     }
 
     public static final class OIConstants {
@@ -134,7 +141,7 @@ public final class Constants {
         public static final double kShooterVelocity = 3500; //RPM
         public static final double kIndexingSpeed = 1;
         public static final double kShootingIndexSpeed = 0.75;
-        public static final double kClimbSpeed = 0.5;
+        public static final double kClimbSpeed = 0.1;
         public static final double kIntakeSpeed = 1;
 
         // Shooter PID Constants
