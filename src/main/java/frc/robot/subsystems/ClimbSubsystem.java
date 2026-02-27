@@ -11,8 +11,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
 public class ClimbSubsystem extends SubsystemBase {
-    private SparkMax rightClimberMotor = new SparkMax(99, MotorType.kBrushless);
-    private SparkMax leftClimberMotor = new SparkMax(100, MotorType.kBrushless);
+    private SparkMax rightClimberMotor = new SparkMax(20, MotorType.kBrushless);
+    private SparkMax leftClimberMotor = new SparkMax(21, MotorType.kBrushless);
 
     /** Creates a new ClimbSubsystem. */
     public ClimbSubsystem() {
@@ -28,7 +28,7 @@ public class ClimbSubsystem extends SubsystemBase {
 
     public void runClimber(double speed) {
         rightClimberMotor.set(speed);
-        leftClimberMotor.set(speed);
+        leftClimberMotor.set(-speed);
     }
 
     public void stopClimber() {

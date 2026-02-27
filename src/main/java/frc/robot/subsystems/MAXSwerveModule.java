@@ -107,6 +107,8 @@ public class MAXSwerveModule {
         // Create a velocity control request for the drive motor. This is essentially the goal velocity we want the wheel to drive at.
         VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
 
+        System.out.println(mpsToMotorRps(corrected.speedMetersPerSecond));
+
         // Set the motor's internal controller to drive at the goal velocity speed.
         m_drivingTalon.setControl(request.withVelocity(mpsToMotorRps(corrected.speedMetersPerSecond)));
 

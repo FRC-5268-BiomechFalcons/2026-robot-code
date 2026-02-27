@@ -16,6 +16,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -84,8 +85,8 @@ public class RobotContainer {
 
         // Reduce the speed of the robot when the left trigger is held
         driverController.leftTrigger()
-                .onTrue(new RunCommand(() -> robotDrive.setSpeedModifier(0.5), robotDrive))
-                .onFalse(new RunCommand(() -> robotDrive.setSpeedModifier(1.0), robotDrive));
+                .onTrue(new InstantCommand(() -> robotDrive.setSpeedModifier(0.5), robotDrive))
+                .onFalse(new InstantCommand(() -> robotDrive.setSpeedModifier(1.0), robotDrive));
 
         // Intake controls
 
@@ -93,6 +94,7 @@ public class RobotContainer {
         driverController.leftBumper().whileTrue(new Intake(intake, -RobotConstants.kIntakeSpeed));
 
         driverController.x().whileTrue(new Climb(climb, RobotConstants.kClimbSpeed));
+        driverController.b().whileTrue(new Climb(climb, -RobotConstants.kClimbSpeed));
 
         // Shooter controls 
         driverController.y().whileTrue(
