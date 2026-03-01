@@ -4,10 +4,7 @@
 
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import com.ctre.phoenix.sensors.PigeonIMU;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -16,16 +13,14 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.ADIS16470_IMU;
-import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -47,8 +42,9 @@ public class DriveSubsystem extends SubsystemBase {
     private final MAXSwerveModule m_rearRight = new MAXSwerveModule(DriveConstants.kRearRightDrivingCanId,
         DriveConstants.kRearRightTurningCanId, DriveConstants.kBackRightChassisAngularOffset);
 
-    // The gyro sensor
-    // private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
+    // Limelights
+    private static final String leftLimelight = "limelight-left";
+    private static final String rightLimelight = "limelight-right";
 
     // Pigeon IMU
     private final PigeonIMU m_gyro = new PigeonIMU(25);
@@ -56,16 +52,12 @@ public class DriveSubsystem extends SubsystemBase {
     private Field2d field = new Field2d();
     QuestNav questNav = new QuestNav();
 
-    // Odometry class for tracking robot pose
-    // SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
-    //     Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-    //     new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-    //             m_rearLeft.getPosition(), m_rearRight.getPosition() });
+    private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
+        DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(m_gyro.getYaw()),
+        new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
+                m_rearLeft.getPosition(), m_rearRight.getPosition() },
+        new Pose2d());
 
-    // Odometry class for tracking robot pose
-    SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
-        Rotation2d.fromDegrees(m_gyro.getYaw()), new SwerveModulePosition[] { m_frontLeft.getPosition(),
-                m_frontRight.getPosition(), m_rearLeft.getPosition(), m_rearRight.getPosition() });
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
 
@@ -84,38 +76,72 @@ public class DriveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // Update the odometry in the periodic block
-        // m_odometry.update(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-        //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-        //                 m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
         // Update the odometry in the periodic block
         m_odometry.update(Rotation2d.fromDegrees(m_gyro.getYaw()),
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
-        questNav.commandPeriodic();
-        PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 
-        if (poseFrames.length > 0) {
-            SmartDashboard.putString("quest state", "quest available");
+        questPoseTracking();
+        limelightPoseTracking(leftLimelight);
+        limelightPoseTracking(rightLimelight);
 
-            // Get the most recent Quest pose
-            Pose3d questPose = poseFrames[poseFrames.length - 1].questPose3d();
-            robotPose = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse());
-
-            // Logging
-            SmartDashboard.putNumber("quest x", robotPose.getX());
-            SmartDashboard.putNumber("quest y", robotPose.getY());
-            SmartDashboard.putNumber("quest theta", robotPose.getRotation().getMeasureZ().in(Degrees));
-
-            m_odometry.resetPose(robotPose.toPose2d());
-        } else {
-            SmartDashboard.putString("quest state", "no quest");
-        }
         field.setRobotPose(getPose());
         SmartDashboard.putNumber("heading", getHeading());
         SmartDashboard.putData("Field", field);
         SmartDashboard.putNumber("Driving Velocity", m_frontRight.getKrakenVelocity());
+    }
+
+    private void questPoseTracking() {
+        questNav.commandPeriodic();
+        PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
+
+        if (poseFrames.length > 0) {
+            PoseFrame last = poseFrames[poseFrames.length - 1];
+
+            Pose3d questPose = last.questPose3d();
+            Pose2d robotPose2d = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse())
+                    .toPose2d();
+
+            /*
+             * The higher the number, the less we trust the quest for that thing. So in this case,
+             * we want to trust the quest for x and y, but we do not want to trust the quest on the
+             * robot heading because the pigeon is probably more accurate
+             */
+            var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.20, // x meters
+                    0.20, // y meters
+                    9999999 // theta (ignore)
+            );
+
+            m_odometry.addVisionMeasurement(robotPose2d, last.dataTimestamp(), questStdDevs);
+        }
+    }
+
+    private void limelightPoseTracking(String limelight) {
+        var alliance = DriverStation.getAlliance();
+
+        LimelightHelpers.PoseEstimate estimatedPose = (alliance.isPresent() &&
+            alliance.get() == DriverStation.Alliance.Red)
+                    ? LimelightHelpers.getBotPoseEstimate_wpiRed(limelight)
+                    : LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
+
+        if (estimatedPose == null || estimatedPose.tagCount < 1)
+            return;
+
+        Pose2d pose = estimatedPose.pose;
+        double timestamp = estimatedPose.timestampSeconds;
+
+        /*
+         * The quest is probably going to be more accurate than the limelight so the limelight
+         * values are set a little higher than the quest. The higher the number, the less the pose
+         * estimator trusts it. For the same reason as the quest, the pigeon should probably be
+         */
+        var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
+                0.50, // y meters
+                9999999 // theta (ignore)
+        );
+
+        m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
     }
 
     public RobotConfig getRobotConfig() {
@@ -147,7 +173,7 @@ public class DriveSubsystem extends SubsystemBase {
      * @return The pose.
      */
     public Pose2d getPose() {
-        return m_odometry.getPoseMeters();
+        return m_odometry.getEstimatedPosition();
     }
 
     /**
@@ -156,11 +182,6 @@ public class DriveSubsystem extends SubsystemBase {
      * @param pose The pose to which to set the odometry.
      */
     public void resetOdometry(Pose2d pose) {
-
-        // m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-        //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-        //                 m_rearLeft.getPosition(), m_rearRight.getPosition() },
-        //         pose);
 
         // Pigeon IMU
         m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw()),
@@ -187,18 +208,6 @@ public class DriveSubsystem extends SubsystemBase {
         double ySpeedDelivered = ySpeed * m_speedModifier * DriveConstants.kMaxSpeedMetersPerSecond;
         double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
 
-        // var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
-        //         ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-        //                 Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)))
-        //         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
-        // SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
-        //         DriveConstants.kMaxSpeedMetersPerSecond);
-        // m_frontLeft.setDesiredState(swerveModuleStates[0]);
-        // m_frontRight.setDesiredState(swerveModuleStates[1]);
-        // m_rearLeft.setDesiredState(swerveModuleStates[2]);
-        // m_rearRight.setDesiredState(swerveModuleStates[3]);
-
-        // PIGEON IMU
         var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
                         Rotation2d.fromDegrees(m_gyro.getYaw()))
