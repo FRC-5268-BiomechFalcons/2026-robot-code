@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5,
-        "y": 4.0
+        "x": 9.679674698795182,
+        "y": 2.843879518072289
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.1624806172958504,
-        "y": 4.0
+        "x": 10.679674698795182,
+        "y": 2.8438795180722893
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "End Pickup"
     },
     {
       "anchor": {
-        "x": 2.5,
-        "y": 4.0
+        "x": 2.8935662650602403,
+        "y": 2.647180722891566
       },
       "prevControl": {
-        "x": 3.173307727871653,
-        "y": 4.0
+        "x": 1.8935662650602403,
+        "y": 2.647180722891566
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 179.6089946963394
+    "rotation": -142.90716270295852
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -178.7113259839189
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

@@ -25,16 +25,17 @@ public class ShootHub extends Command {
         this.driveSubsystem = driveSubsystem;
 
         addRequirements(shooter, driveSubsystem, intakeSubsystem);
-        hubVector = driveSubsystem.getHubVectorAngle();
-        goalRpm = (60 * driveSubsystem.findProjectileTrajectoryVelocity()) /
-            (2 * Math.PI * Constants.RobotConstants.kShooterRadius);
-        rotController = new PIDController(0.014, 0, 0.0001);
+
+        rotController = new PIDController(0.03, 0, 0.0001);
         rotController.setTolerance(1.5);
     }
 
     @Override
     public void initialize() {
-        shooter.setSetpoint(goalRpm);
+        hubVector = driveSubsystem.getHubVectorAngle();
+        goalRpm = (60 * driveSubsystem.findProjectileTrajectoryVelocity()) /
+            (2 * Math.PI * Constants.RobotConstants.kShooterRadius);
+        shooter.setSetpoint();
         rotController.setSetpoint(hubVector);
     }
 
@@ -43,7 +44,7 @@ public class ShootHub extends Command {
         double rot = rotController.calculate(driveSubsystem.getHeading());
         driveSubsystem.drive(0, 0, rot, false);
 
-        if (shooter.hitRPMSetpoint(goalRpm) && rotController.atSetpoint()) {
+        if (shooter.hitRPMSetpoint() && rotController.atSetpoint()) {
             intakeSubsystem.index(indexSpeed);
         } else {
             intakeSubsystem.stopMotors();

@@ -23,14 +23,14 @@ public class Shoot extends Command {
 
     @Override
     public void initialize() {
-        shooter.setSetpoint(goalRpm);
+        shooter.setSetpoint();
         hitRPM = false;
     }
 
     @Override
     public void execute() {
 
-        if (shooter.hitRPMSetpoint(goalRpm) && !hitRPM) {
+        if (shooter.hitRPMSetpoint() && !hitRPM) {
             intakeSubsystem.index(indexSpeed);
             hitRPM = true;
         }

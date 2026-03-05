@@ -115,8 +115,9 @@ public final class Constants {
     }
 
     public static final class QuestConstants {
-        public static final Transform3d ROBOT_TO_QUEST = new Transform3d(-0.0635, 0.2921, 0.0,
-            new Rotation3d(0.0, 0.0, Units.degreesToRadians(-90)));
+        public static final Transform3d ROBOT_TO_QUEST = new Transform3d(Units.inchesToMeters(10.5),
+            Units.inchesToMeters(10), Units.inchesToMeters(15.4),
+            new Rotation3d(Units.degreesToRadians(90), 0.0, 0.0));
     }
 
     public static final class MotorConstants {
@@ -141,7 +142,7 @@ public final class Constants {
     public static final class RobotConstants {
         public static final double kShooterAngle = 70; //Degrees
         public static final double kShooterRadius = 2; //Inches
-        public static final double kShooterVelocity = 3500; //RPM
+        public static final double kShooterVelocity = 3520; //RPM
         public static final double kIndexingSpeed = 1;
         public static final double kShootingIndexSpeed = 0.75;
         public static final double kClimbSpeed = 0.5;

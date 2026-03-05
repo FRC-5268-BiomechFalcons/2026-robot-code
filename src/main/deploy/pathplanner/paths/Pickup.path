@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5,
-        "y": 4.0
+        "x": 2.6416833095577745,
+        "y": 4.028530670470756
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.1624806172958504,
-        "y": 4.0
+        "x": 2.3699714693295286,
+        "y": 2.3853209700427964
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "End - ShootThenClimb1"
     },
     {
       "anchor": {
-        "x": 2.5,
-        "y": 4.0
+        "x": 9.679674698795182,
+        "y": 2.843879518072289
       },
       "prevControl": {
-        "x": 3.173307727871653,
-        "y": 4.0
+        "x": 7.324838750150389,
+        "y": 2.3133944966742868
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "End Pickup"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 179.6089946963394
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -178.7113259839189
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

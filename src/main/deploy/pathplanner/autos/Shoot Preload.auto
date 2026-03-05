@@ -5,15 +5,110 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "ShootThenClimb 1"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "ShootThenClimb 1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shooter"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Index"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Shoot Preload"
+            "name": "Stop"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Pickup"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Come Back"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shooter"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Index"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Stop"
           }
         }
       ]
