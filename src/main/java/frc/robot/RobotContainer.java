@@ -23,16 +23,22 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.RobotConstants;
-import frc.robot.Commands.Climb;
+// import frc.robot.Commands.Climb;
+import frc.robot.Commands.Index;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
-import frc.robot.subsystems.ClimbSubsystem;
+import frc.robot.Commands.ShootHub;
+import frc.robot.Commands.ShooterRevamp;
+import frc.robot.Commands.StopMotors;
+import frc.robot.Commands.UpdateRPM;
+// import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -52,9 +58,9 @@ public class RobotContainer {
     CommandXboxController driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
 
     // Subsystems
-    ShooterSubsystem shooter = new ShooterSubsystem();
-    IntakeSubsystem intake = new IntakeSubsystem();
-    ClimbSubsystem climb = new ClimbSubsystem();
+    public ShooterSubsystem shooter = new ShooterSubsystem();
+    public IntakeSubsystem intake = new IntakeSubsystem();
+    // public ClimbSubsystem climb = new ClimbSubsystem();
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -74,18 +80,26 @@ public class RobotContainer {
                                 OIConstants.kDriveDeadband),
                         -MathUtil.applyDeadband(Math.pow(driverController.getRightX(), 3),
                                 OIConstants.kDriveDeadband),
-                        true),
+                        false),
                     robotDrive));
 
         registerAutonomousCommands();
     }
 
     private void registerAutonomousCommands() {
+        NamedCommands.registerCommand("Shooter", new ShooterRevamp(shooter).withTimeout(2));
+        NamedCommands.registerCommand("Index", new Index(intake).withTimeout(4));
         NamedCommands.registerCommand("Shoot Preload", new Shoot(shooter, intake,
             RobotConstants.kShooterVelocity, RobotConstants.kShootingIndexSpeed).withTimeout(5));
 
-        NamedCommands.registerCommand("Climb",
-                new Climb(climb, AutoConstants.kAutoClimbSpeed).withTimeout(3));
+        NamedCommands.registerCommand("Stop", new StopMotors(shooter, intake));
+        // NamedCommands.registerCommand("Climb",
+        //         new Climb(climb, AutoConstants.kAutoClimbSpeed).withTimeout(3));
+
+        NamedCommands.registerCommand("Intake",
+                new Intake(intake, RobotConstants.kIntakeSpeed).withTimeout(4));
+
+        // NamedCommands.registerCommand("Stop Motors", new InstantCommand(() -> ShooterSubsystem.stop));
     }
 
     /*
@@ -96,7 +110,7 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         // Zero the heading when the right stick is pressed
-        driverController.rightStick().onTrue(new RunCommand(() -> robotDrive.zeroHeading(), robotDrive));
+        driverController.rightStick().onTrue(new InstantCommand(() -> robotDrive.zeroHeading(), robotDrive));
 
         // Reduce the speed of the robot when the left trigger is held
         driverController.leftTrigger()
@@ -105,18 +119,28 @@ public class RobotContainer {
 
         // Intake controls
 
-        driverController.rightBumper().whileTrue(new Intake(intake, RobotConstants.kIntakeSpeed));
         driverController.leftBumper().whileTrue(new Intake(intake, -RobotConstants.kIntakeSpeed));
+        driverController.rightBumper().toggleOnTrue(new Intake(intake, RobotConstants.kIntakeSpeed));
 
-        driverController.x().whileTrue(new Climb(climb, RobotConstants.kClimbSpeed));
-        driverController.b().whileTrue(new Climb(climb, -RobotConstants.kClimbSpeed));
+        // driverController.x().whileTrue(new Climb(climb, RobotConstants.kClimbSpeed));
+        // driverController.b().whileTrue(new Climb(climb, -RobotConstants.kClimbSpeed));
 
         // Shooter controls 
         driverController.y().whileTrue(
                 new Shoot(shooter, intake, -RobotConstants.kShooterVelocity, RobotConstants.kIndexingSpeed));
 
-        driverController.rightTrigger().whileTrue(new Shoot(shooter, intake, RobotConstants.kShooterVelocity,
-            RobotConstants.kShootingIndexSpeed));
+        driverController.a()
+                .whileTrue(new ShootHub(shooter, intake, robotDrive, RobotConstants.kIndexingSpeed));
+
+        // driverController.rightTrigger().whileTrue(new Shoot(shooter, intake, RobotConstants.kShooterVelocity,
+        //     RobotConstants.kShootingIndexSpeed));
+
+        driverController.rightTrigger().whileTrue(
+                new SequentialCommandGroup(new ShooterRevamp(shooter).withTimeout(2), new Index(intake)))
+                .whileFalse(new StopMotors(shooter, intake));
+
+        driverController.pov(0).onTrue(new UpdateRPM(shooter, true));
+        driverController.pov(180).onTrue(new UpdateRPM(shooter, false));
 
     }
 

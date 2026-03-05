@@ -32,13 +32,12 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        // Set the ctre logger to log to the first flashdrive plugged in
+        // Set the logger to log to the first flashdrive plugged in
         SignalLogger.setPath("/media/sda1/");
 
         // Explicitly start the logger
         SignalLogger.start();
-        // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
-        // autonomous chooser on the dashboard.
+
         robotContainer = new RobotContainer();
 
         autoChooser.addOption("Drive Straight", robotContainer.driveStraightAuto());
@@ -107,6 +106,8 @@ public class Robot extends TimedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
+
+        robotContainer.shooter.updateRPM(3500);
     }
 
     /** This function is called periodically during operator control. */
