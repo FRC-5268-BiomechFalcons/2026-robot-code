@@ -4,7 +4,6 @@
 
 package frc.robot.Commands;
 
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.ShooterSubsystem;
 
@@ -13,20 +12,29 @@ import frc.robot.subsystems.ShooterSubsystem;
 public class UpdateRPM extends InstantCommand {
     ShooterSubsystem shooterSubsystem;
     boolean isIncreasing;
+    double rpm;
 
     /** Creates a new UpdateRPM. */
     public UpdateRPM(ShooterSubsystem shooterSubsystem, boolean isIncreasing) {
         // Use addRequirements() here to declare subsystem dependencies.
         this.shooterSubsystem = shooterSubsystem;
         this.isIncreasing = isIncreasing;
+        rpm = 0;
+    }
+
+    public UpdateRPM(ShooterSubsystem shooterSubsystem, double rpm) {
+        this.shooterSubsystem = shooterSubsystem;
+        this.rpm = rpm;
     }
 
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-        if (isIncreasing) {
+        if (rpm != 0) {
+            shooterSubsystem.updateRPM(rpm);
+        } else if (isIncreasing) {
             shooterSubsystem.updateRPM(shooterSubsystem.getUpdatingRPM() + 100);
-        } else {
+        } else if (!isIncreasing) {
             shooterSubsystem.updateRPM(shooterSubsystem.getUpdatingRPM() - 100);
         }
     }

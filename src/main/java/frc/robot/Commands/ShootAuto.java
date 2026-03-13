@@ -4,38 +4,51 @@
 
 package frc.robot.Commands;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.ClimbSubsystem;
+import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class Climb extends Command {
-    ClimbSubsystem climbSubsystem;
-    double speed;
+public class ShootAuto extends Command {
+    ShooterSubsystem shooter;
+    DriveSubsystem drive;
+    IntakeSubsystem intake;
 
-    /** Creates a new Climb. */
-    public Climb(ClimbSubsystem climbSubsystem, double speed) {
+    /** Creates a new ShootAuto. */
+    public ShootAuto(ShooterSubsystem shooter, DriveSubsystem drive, IntakeSubsystem intake) {
         // Use addRequirements() here to declare subsystem dependencies.
-        addRequirements(climbSubsystem);
-        this.climbSubsystem = climbSubsystem;
-        this.speed = speed;
+        this.shooter = shooter;
+        this.drive = drive;
+        this.intake = intake;
     }
 
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-        climbSubsystem.runClimber(speed);
     }
 
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
+        double distanceToHub = drive.getDistanceToHub();
+        double requiredRPM = shooter.getTableRPM(distanceToHub);
+        shooter.updateRPM(requiredRPM);
+        shooter.setSetpoint();
+
+        if (shooter.hitRPMSetpoint()) {
+            Timer.delay(2);
+            intake.index(0.5);
+        }
     }
 
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        climbSubsystem.stopClimber();
+        shooter.stopControl();
+        intake.stopMotors();
     }
 
     // Returns true when the command should end.

@@ -4,7 +4,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
 
@@ -21,23 +20,25 @@ public class LockOn extends Command {
 
         addRequirements(driveSubsystem);
 
-        rotController = new PIDController(0.03, 0, 0.0001);
+        rotController = new PIDController(0.011, 0, 0);
         rotController.setTolerance(1.5);
     }
 
     @Override
     public void execute() {
         hubVector = driveSubsystem.getHubVectorAngle();
+        System.out.println(hubVector);
         rotController.setSetpoint(hubVector);
         double rot = rotController.calculate(driveSubsystem.getHeading());
         driveSubsystem.drive(
                 -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3), OIConstants.kDriveDeadband),
-                rot, false);
+                rot, true);
     }
 
     @Override
     public void end(boolean interrupted) {
+        System.out.println("In End");
         driveSubsystem.drive(0, 0, 0, false);
     }
 

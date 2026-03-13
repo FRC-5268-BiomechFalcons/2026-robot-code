@@ -9,22 +9,38 @@ import frc.robot.subsystems.ClimbSubsystem;
 
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class Climb extends Command {
+public class Hook extends Command {
     ClimbSubsystem climbSubsystem;
     double speed;
+    Side activeSide;
+
+    public enum Side {
+        Left, Right, Both
+    }
 
     /** Creates a new Climb. */
-    public Climb(ClimbSubsystem climbSubsystem, double speed) {
+    public Hook(ClimbSubsystem climbSubsystem, double speed, Side activeSide) {
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(climbSubsystem);
         this.climbSubsystem = climbSubsystem;
         this.speed = speed;
+        this.activeSide = activeSide;
     }
 
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-        climbSubsystem.runClimber(speed);
+        switch (activeSide) {
+            case Left:
+                climbSubsystem.runLeftHook(speed);
+                break;
+            case Right:
+                climbSubsystem.runRightHook(speed);
+                break;
+            default:
+                climbSubsystem.runHook(speed);
+                break;
+        }
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -35,7 +51,7 @@ public class Climb extends Command {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        climbSubsystem.stopClimber();
+        climbSubsystem.stopHook();
     }
 
     // Returns true when the command should end.

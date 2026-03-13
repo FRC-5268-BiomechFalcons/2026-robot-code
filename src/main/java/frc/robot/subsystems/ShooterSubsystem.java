@@ -12,6 +12,7 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
@@ -25,6 +26,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private double goalRPM = 0;
     private double rpm = 3000;
     private Slot0Configs slot0Configs = new Slot0Configs();
+    private InterpolatingDoubleTreeMap shooterTable = new InterpolatingDoubleTreeMap();
 
     /** Creates a new Shooter. */
     public ShooterSubsystem() {
@@ -33,6 +35,21 @@ public class ShooterSubsystem extends SubsystemBase {
         slot0Configs.kP = RobotConstants.shooterkP;
         slot0Configs.kI = RobotConstants.shooterkI;
         slot0Configs.kD = RobotConstants.shooterkD;
+
+        // Interpolation Table Entries
+        shooterTable.put(1.2954, 2800.0);
+        shooterTable.put(1.651, 3000.0);
+        shooterTable.put(2.1, 3300.0);
+        shooterTable.put(2.87, 3700.0);
+        shooterTable.put(3.3, 3900.0);
+        shooterTable.put(4.04, 4300.0);
+
+        //        shooterTable.put(1.8796, 3000.0);
+        // shooterTable.put(2.2352, 3200.0);
+        // shooterTable.put(2.68224, 3500.0);
+        // shooterTable.put(3.884, 3900.0);
+        // shooterTable.put(3.63, 4000.0);
+        // shooterTable.put(4.369, 4300.0);
 
         shooterMotor.getConfigurator().apply(slot0Configs);
     }
@@ -51,7 +68,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void updateRPM(double newRPM) {
-        this.rpm = newRPM;
+        rpm = newRPM;
     }
 
     public void setSetpoint() {
@@ -75,5 +92,9 @@ public class ShooterSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Current Shooter Setpoint", goalRPM);
         SmartDashboard.putString("Motor Temp", shooterMotor.getDeviceTemp().getValueAsDouble() + " °C");
         SmartDashboard.putNumber("Current RPM Setpoint", rpm);
+    }
+
+    public double getTableRPM(double distance) {
+        return shooterTable.get(distance);
     }
 }

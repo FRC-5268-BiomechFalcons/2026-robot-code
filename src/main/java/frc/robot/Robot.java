@@ -4,7 +4,13 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Rotation;
+
 import com.ctre.phoenix6.SignalLogger;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,17 +38,13 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        // Set the logger to log to the first flashdrive plugged in
-        SignalLogger.setPath("/media/sda1/");
-
-        // Explicitly start the logger
-        SignalLogger.start();
-
         robotContainer = new RobotContainer();
 
         autoChooser.addOption("Drive Straight", robotContainer.driveStraightAuto());
         autoChooser.addOption("Shoot Preload Then Climb", robotContainer.shootThenClimbAuto());
         autoChooser.addOption("Shoot Preload", robotContainer.shootPreloadAuto());
+        autoChooser.addOption("Left 1 Swipe + Climb", robotContainer.leftOneSwipeAndClimb());
+        autoChooser.addOption("Left 2 Swipe + Climb", robotContainer.leftTwoSwipeAndClimb());
 
         SmartDashboard.putData(autoChooser);
     }
@@ -68,7 +70,6 @@ public class Robot extends TimedRobot {
     public void disabledInit() {
         // Explicitly stop logging
         // If the user does not call stop(), then it's possible to lose the last few seconds of data
-        SignalLogger.stop();
     }
 
     @Override
@@ -108,6 +109,8 @@ public class Robot extends TimedRobot {
         }
 
         robotContainer.shooter.updateRPM(3500);
+        robotContainer.robotDrive
+                .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
     }
 
     /** This function is called periodically during operator control. */
