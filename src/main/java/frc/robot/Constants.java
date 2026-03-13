@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -129,11 +130,11 @@ public final class Constants {
     public static final class FieldConstants {
         // All in Meters
         public static final double kHubHeight = Units.inchesToMeters(72);
-        public static final double kHubDistanceFromAlliance = Units.inchesToMeters(158.6);
-        public static final double kHubDistanceLeftEdge = Units.inchesToMeters(138.65);
-        public static final double kHubDistanceRightEdge = Units.inchesToMeters(185.65);
-        public static final Pose3d kHubTarget = new Pose3d(kHubDistanceFromAlliance + 20,
-            (kHubDistanceLeftEdge + kHubDistanceRightEdge) / 2, kHubHeight, new Rotation3d());
+
+        public static final Pose3d kHubTargetBlue = new Pose3d(4.595, 4.024,
+            kHubHeight - Units.inchesToMeters(20), new Rotation3d());
+        public static final Pose3d kHubTargetRed = new Pose3d(11.909, 4.024,
+            kHubHeight - Units.inchesToMeters(20), new Rotation3d());
 
         public static final double kFuelWeight = Units.lbsToKilograms(0.474); // Kg
 

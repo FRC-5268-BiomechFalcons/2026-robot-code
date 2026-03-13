@@ -4,10 +4,7 @@
 
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import com.ctre.phoenix.sensors.PigeonIMU;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -16,23 +13,24 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.ADIS16470_IMU;
-import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.FieldConstants;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
@@ -57,6 +55,8 @@ public class DriveSubsystem extends SubsystemBase {
     private Field2d field = new Field2d();
     QuestNav questNav = new QuestNav();
 
+    boolean isResetting = false;
+
     // Odometry class for tracking robot pose
     // SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
     //     Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
@@ -76,9 +76,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
-
-    private static final String leftLimelight = "limelight-left";
+    private Pose3d hub;
+    private static final String shooterLimelight = "limelight-shooter";
     private static final String rightLimelight = "limelight-right";
+    private double x = 0;
+    private double y = 0;
 
     private Pose3d robotPose = new Pose3d();
 
@@ -89,9 +91,15 @@ public class DriveSubsystem extends SubsystemBase {
         AutoBuilder.configure(this::getPose, this::resetOdometry, this::getRobotRelativeSpeeds,
                 (speeds, feedsforwards) -> drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond,
                         speeds.omegaRadiansPerSecond, false),
-                new PPHolonomicDriveController(new PIDConstants(0.5, 0.0, 0.0),
+                new PPHolonomicDriveController(new PIDConstants(0.2, 0.0, 0.0),
                     new PIDConstants(2, 0.0, 0.0)),
                 getRobotConfig(), this::shouldFlipPath, this);
+
+        if (shouldFlipPath()) {
+            hub = FieldConstants.kHubTargetRed;
+        } else {
+            hub = FieldConstants.kHubTargetBlue;
+        }
     }
 
     @Override
@@ -103,17 +111,25 @@ public class DriveSubsystem extends SubsystemBase {
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
         questPoseTracking();
-        // limelightPoseTracking(leftLimelight);
+        limelightPoseTracking(shooterLimelight);
         // limelightPoseTracking(rightLimelight);
 
         field.setRobotPose(getPose());
         SmartDashboard.putNumber("heading", getHeading());
         SmartDashboard.putData("Field", field);
         SmartDashboard.putNumber("Driving Velocity", m_frontRight.getKrakenVelocity());
+        SmartDashboard.putData(field);
+        SmartDashboard.putBoolean("Can shoot to hub", (findProjectileTrajectoryVelocity() > 0.0));
+        SmartDashboard.putNumber("Distance to Hub", getDistanceToHub());
     }
 
     private void questPoseTracking() {
         questNav.commandPeriodic();
+
+        if (isResetting) {
+            PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
+            return;
+        }
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 
         if (poseFrames.length > 0) {
@@ -129,9 +145,9 @@ public class DriveSubsystem extends SubsystemBase {
              * we want to trust the quest for x and y, but we do not want to trust the quest on the
              * robot heading because the pigeon is probably more accurate
              */
-            var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.20, // x meters
-                    0.20, // y meters
-                    1 // theta (ignore)
+            var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.05, // x meters
+                    0.05, // y meters
+                    .04 // theta (ignore)
             );
 
             m_odometry.addVisionMeasurement(robotPose2d, last.dataTimestamp(), questStdDevs);
@@ -140,32 +156,44 @@ public class DriveSubsystem extends SubsystemBase {
         }
     }
 
-    // private void limelightPoseTracking(String limelight) {
-    //     var alliance = DriverStation.getAlliance();
+    private void limelightPoseTracking(String limelight) {
+        var alliance = DriverStation.getAlliance();
+        boolean doRejectUpdate = false;
+        LimelightHelpers.PoseEstimate estimatedPose = (alliance.isPresent() &&
+            alliance.get() == DriverStation.Alliance.Red)
+                    ? LimelightHelpers.getBotPoseEstimate_wpiRed(limelight)
+                    : LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
 
-    //     LimelightHelpers.PoseEstimate estimatedPose = (alliance.isPresent() &&
-    //         alliance.get() == DriverStation.Alliance.Red)
-    //                 ? LimelightHelpers.getBotPoseEstimate_wpiRed(limelight)
-    //                 : LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
+        if (estimatedPose.tagCount == 1 && estimatedPose.rawFiducials.length == 1) {
+            if (estimatedPose.rawFiducials[0].ambiguity > .7) {
+                doRejectUpdate = true;
+            }
+            if (estimatedPose.rawFiducials[0].distToCamera > 3) {
+                doRejectUpdate = true;
+            }
+        }
+        if (estimatedPose.tagCount == 0) {
+            doRejectUpdate = true;
+        }
 
-    //     if (estimatedPose == null || estimatedPose.tagCount < 1)
-    //         return;
+        if (!doRejectUpdate) {
+            Pose2d pose = estimatedPose.pose;
+            double timestamp = estimatedPose.timestampSeconds;
+            var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
+                    0.50, // y meters
+                    9999 // theta (ignore)
+            );
 
-    //     Pose2d pose = estimatedPose.pose;
-    //     double timestamp = estimatedPose.timestampSeconds;
+            m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
+        }
 
-    //     /*
-    //      * The quest is probably going to be more accurate than the limelight so the limelight
-    //      * values are set a little higher than the quest. The higher the number, the less the pose
-    //      * estimator trusts it. For the same reason as the quest, the pigeon should probably be
-    //      */
-    //     var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
-    //             0.50, // y meters
-    //             1.5 // theta (ignore)
-    //     );
+        /*
+         * The quest is probably going to be more accurate than the limelight so the limelight
+         * values are set a little higher than the quest. The higher the number, the less the pose
+         * estimator trusts it. For the same reason as the quest, the pigeon should probably be
+         */
 
-    //     m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
-    // }
+    }
 
     public RobotConfig getRobotConfig() {
         try {
@@ -217,8 +245,14 @@ public class DriveSubsystem extends SubsystemBase {
                         m_rearLeft.getPosition(), m_rearRight.getPosition() },
                 pose);
 
+        resetQuest(pose);
+    }
+
+    public void resetQuest(Pose2d pose) {
         Pose3d pose3d = new Pose3d(pose);
         questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
+
+        isResetting = true;
     }
 
     /**
@@ -295,6 +329,7 @@ public class DriveSubsystem extends SubsystemBase {
     /** Zeroes the heading of the robot. */
     public void zeroHeading() {
         m_gyro.setYaw(0);
+        resetOdometry(getPose());
     }
 
     /**
@@ -333,16 +368,16 @@ public class DriveSubsystem extends SubsystemBase {
 
     public double getHubVectorAngle() {
         Pose3d pos = new Pose3d(getPose());
-        Pose3d translation = pos.relativeTo(Constants.FieldConstants.kHubTarget);
+        Pose3d translation = pos.relativeTo(hub);
         return Math.toDegrees(Math.atan2(translation.getY(), translation.getX()));
     }
 
     public double findProjectileTrajectoryVelocity() {
-        double heightDifference = Constants.FieldConstants.kHubHeight;
+        double heightDifference = Constants.FieldConstants.kHubHeight - Units.inchesToMeters(20);
         double g = 9.81; // Acceleration due to gravity in m/s^2
         double angleRadians = Math.toRadians(Constants.RobotConstants.kShooterAngle);
         Pose3d pos = new Pose3d(getPose());
-        Pose3d translation = pos.relativeTo(Constants.FieldConstants.kHubTarget);
+        Pose3d translation = pos.relativeTo(hub);
         double d = Math.sqrt(Math.pow(translation.getX(), 2) + Math.pow(translation.getY(), 2)); // distance to hub
 
         // Using the projectile motion formula to calculate initial velocity
@@ -355,6 +390,27 @@ public class DriveSubsystem extends SubsystemBase {
         }
 
         return Math.sqrt(numerator / denominator);
+    }
+
+    public double getDistanceToHub() {
+        Pose3d pos = new Pose3d(getPose());
+        Pose3d translation = pos.relativeTo(hub);
+        double d = Math.sqrt(Math.pow(translation.getX(), 2) + Math.pow(translation.getY(), 2));
+
+        return d;
+    }
+
+    public Pose3d getHubPose() {
+        return hub;
+    }
+
+    public Translation2d getFieldRelativeVelocity() {
+        ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
+        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds,
+                Rotation2d.fromDegrees(getHeading()));
+
+        return new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond,
+            fieldRelativeSpeeds.vyMetersPerSecond);
     }
 
 }

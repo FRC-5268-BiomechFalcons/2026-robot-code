@@ -1,6 +1,5 @@
 package frc.robot.Commands;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.DriveSubsystem;
@@ -13,7 +12,7 @@ public class ShootHub extends Command {
     double goalRpm;
     IntakeSubsystem intakeSubsystem;
     double indexSpeed;
-    PIDController rotController;
+    // PIDController rotController;
     DriveSubsystem driveSubsystem;
     double hubVector;
 
@@ -26,25 +25,27 @@ public class ShootHub extends Command {
 
         addRequirements(shooter, driveSubsystem, intakeSubsystem);
 
-        rotController = new PIDController(0.03, 0, 0.0001);
-        rotController.setTolerance(1.5);
+        // rotController = new PIDController(0.03, 0, 0.0001);
+        // rotController.setTolerance(1.5);
     }
 
     @Override
     public void initialize() {
-        hubVector = driveSubsystem.getHubVectorAngle();
-        goalRpm = (60 * driveSubsystem.findProjectileTrajectoryVelocity()) /
-            (2 * Math.PI * Constants.RobotConstants.kShooterRadius);
-        shooter.setSetpoint();
-        rotController.setSetpoint(hubVector);
+
+        // rotController.setSetpoint(hubVector);
     }
 
     @Override
     public void execute() {
-        double rot = rotController.calculate(driveSubsystem.getHeading());
-        driveSubsystem.drive(0, 0, rot, false);
+        // double rot = rotController.calculate(driveSubsystem.getHeading());
+        // driveSubsystem.drive(0, 0, rot, false);
+        hubVector = driveSubsystem.getHubVectorAngle();
+        goalRpm = (60 * driveSubsystem.findProjectileTrajectoryVelocity()) /
+            (2 * Math.PI * Constants.RobotConstants.kShooterRadius);
+        shooter.updateRPM(goalRpm);
+        shooter.setSetpoint();
 
-        if (shooter.hitRPMSetpoint() && rotController.atSetpoint()) {
+        if (shooter.hitRPMSetpoint()) {
             intakeSubsystem.index(indexSpeed);
         } else {
             intakeSubsystem.stopMotors();
