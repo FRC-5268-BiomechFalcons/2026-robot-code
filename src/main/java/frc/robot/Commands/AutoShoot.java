@@ -6,14 +6,16 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.util.ShootOnTheFlyCalculator;;
 
 
-public class ShootOnMove extends Command {
+public class AutoShoot extends Command {
     private final ShooterSubsystem shooter;
     private final IntakeSubsystem intakeSubsystem;
     private final DriveSubsystem driveSubsystem;
@@ -27,10 +29,11 @@ public class ShootOnMove extends Command {
 
     private final PIDController rotController;
     private boolean hitRPM;
+    private Timer timer;
 
-    public ShootOnMove(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem,
-            DriveSubsystem driveSubsystem, ShootOnTheFlyCalculator sotf, DoubleSupplier xSupplier,
-            DoubleSupplier ySupplier, double indexSpeed, double latencySeconds) {
+    public AutoShoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, DriveSubsystem driveSubsystem,
+            ShootOnTheFlyCalculator sotf, DoubleSupplier xSupplier, DoubleSupplier ySupplier,
+            double indexSpeed, double latencySeconds) {
 
         this.shooter = shooter;
         this.intakeSubsystem = intakeSubsystem;
@@ -49,6 +52,13 @@ public class ShootOnMove extends Command {
         rotController.enableContinuousInput(-180.0, 180.0);
 
         this.hitRPM = false;
+        this.timer = new Timer();
+    }
+
+    @Override
+    public void initialize() {
+        timer.reset();
+        timer.start();
     }
 
     @Override
@@ -61,6 +71,7 @@ public class ShootOnMove extends Command {
                 latencySeconds);
 
         Rotation2d desiredHeading = cmd.robotHeading().plus(Rotation2d.fromDegrees(180));
+
         double goalRpm = cmd.rpm();
         shooter.updateRPM(goalRpm);
         shooter.setSetpoint();
@@ -76,7 +87,7 @@ public class ShootOnMove extends Command {
 
         driveSubsystem.drive(x, y, rot, true);
 
-        if ((shooter.hitRPMSetpoint() && rotController.atSetpoint()) || hitRPM) {
+        if ((shooter.hitRPMSetpoint() && rotController.atSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
         } else {
@@ -89,5 +100,8 @@ public class ShootOnMove extends Command {
         shooter.stopControl();
         intakeSubsystem.stopMotors();
         driveSubsystem.drive(0, 0, 0, false);
+        timer.stop();
+        timer.reset();
+        hitRPM = false;
     }
 }

@@ -13,7 +13,6 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -46,9 +45,6 @@ public class DriveSubsystem extends SubsystemBase {
     private final MAXSwerveModule m_rearRight = new MAXSwerveModule(DriveConstants.kRearRightDrivingCanId,
         DriveConstants.kRearRightTurningCanId, DriveConstants.kBackRightChassisAngularOffset);
 
-    // The gyro sensor
-    // private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
-
     // Pigeon IMU
     private final PigeonIMU m_gyro = new PigeonIMU(25);
 
@@ -56,17 +52,6 @@ public class DriveSubsystem extends SubsystemBase {
     QuestNav questNav = new QuestNav();
 
     boolean isResetting = false;
-
-    // Odometry class for tracking robot pose
-    // SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
-    //     Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-    //     new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-    //             m_rearLeft.getPosition(), m_rearRight.getPosition() });
-
-    // Odometry class for tracking robot pose
-    // SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics,
-    //     Rotation2d.fromDegrees(m_gyro.getYaw()), new SwerveModulePosition[] { m_frontLeft.getPosition(),
-    //             m_frontRight.getPosition(), m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
         DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(m_gyro.getYaw()),
@@ -78,11 +63,7 @@ public class DriveSubsystem extends SubsystemBase {
     private double m_speedModifier = 1.0;
     private Pose3d hub;
     private static final String shooterLimelight = "limelight-shooter";
-    private static final String rightLimelight = "limelight-right";
-    private double x = 0;
-    private double y = 0;
-
-    private Pose3d robotPose = new Pose3d();
+    private static final String leftLimelight = "limelight-left";
 
     /** Creates a new DriveSubsystem. */
     public DriveSubsystem() {
@@ -110,16 +91,14 @@ public class DriveSubsystem extends SubsystemBase {
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
+        // VISION POSE TRACKING - QUEST + 2 LIMELIGHTS
         questPoseTracking();
         limelightPoseTracking(shooterLimelight);
-        // limelightPoseTracking(rightLimelight);
+        // limelightPoseTracking(leftLimelight);
 
         field.setRobotPose(getPose());
-        SmartDashboard.putNumber("heading", getHeading());
         SmartDashboard.putData("Field", field);
-        SmartDashboard.putNumber("Driving Velocity", m_frontRight.getKrakenVelocity());
         SmartDashboard.putData(field);
-        SmartDashboard.putBoolean("Can shoot to hub", (findProjectileTrajectoryVelocity() > 0.0));
         SmartDashboard.putNumber("Distance to Hub", getDistanceToHub());
     }
 
@@ -147,7 +126,7 @@ public class DriveSubsystem extends SubsystemBase {
              */
             var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.05, // x meters
                     0.05, // y meters
-                    .04 // theta (ignore)
+                    1 // theta (radians)
             );
 
             m_odometry.addVisionMeasurement(robotPose2d, last.dataTimestamp(), questStdDevs);
@@ -181,7 +160,7 @@ public class DriveSubsystem extends SubsystemBase {
             double timestamp = estimatedPose.timestampSeconds;
             var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
                     0.50, // y meters
-                    9999 // theta (ignore)
+                    1 // theta (ignore)
             );
 
             m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
@@ -234,11 +213,6 @@ public class DriveSubsystem extends SubsystemBase {
      */
     public void resetOdometry(Pose2d pose) {
 
-        // m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
-        //         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-        //                 m_rearLeft.getPosition(), m_rearRight.getPosition() },
-        //         pose);
-
         // Pigeon IMU
         m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw()),
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
@@ -269,17 +243,6 @@ public class DriveSubsystem extends SubsystemBase {
         double xSpeedDelivered = xSpeed * m_speedModifier * DriveConstants.kMaxSpeedMetersPerSecond;
         double ySpeedDelivered = ySpeed * m_speedModifier * DriveConstants.kMaxSpeedMetersPerSecond;
         double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
-
-        // var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
-        //         ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-        //                 Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)))
-        //         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
-        // SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
-        //         DriveConstants.kMaxSpeedMetersPerSecond);
-        // m_frontLeft.setDesiredState(swerveModuleStates[0]);
-        // m_frontRight.setDesiredState(swerveModuleStates[1]);
-        // m_rearLeft.setDesiredState(swerveModuleStates[2]);
-        // m_rearRight.setDesiredState(swerveModuleStates[3]);
 
         // PIGEON IMU
         var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative

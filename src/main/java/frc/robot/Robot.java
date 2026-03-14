@@ -4,10 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Rotation;
-
-import com.ctre.phoenix6.SignalLogger;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -109,8 +105,8 @@ public class Robot extends TimedRobot {
         }
 
         robotContainer.shooter.updateRPM(3500);
-        robotContainer.robotDrive
-                .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
+        // robotContainer.robotDrive
+        //         .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
     }
 
     /** This function is called periodically during operator control. */

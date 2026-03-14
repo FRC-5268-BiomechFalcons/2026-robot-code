@@ -21,8 +21,11 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
@@ -33,7 +36,7 @@ import frc.robot.Commands.Hook;
 import frc.robot.Commands.Index;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
-import frc.robot.Commands.ShootOnMove;
+import frc.robot.Commands.AutoShoot;
 import frc.robot.Commands.ShooterRevamp;
 import frc.robot.Commands.StopMotors;
 import frc.robot.Commands.UpdateRPM;
@@ -88,35 +91,34 @@ public class RobotContainer {
 
         registerAutonomousCommands();
 
-        sotfCalculator.addTableEntry(1.2954, 2750, 0, 2.34);
-        sotfCalculator.addTableEntry(1.651, 2950, 0, 2.11);
-        sotfCalculator.addTableEntry(2.1, 3250, 0, 2.6);
-        sotfCalculator.addTableEntry(2.87, 3650, 0, 2.87);
-        sotfCalculator.addTableEntry(3.3, 3850, 0, 3.0);
-        sotfCalculator.addTableEntry(4.04, 4250, 0, 3.2);
-
+        // Configuring RPM Table
+        sotfCalculator.addTableEntry(1.78, 2700, 0, 1.04);
+        sotfCalculator.addTableEntry(2.03, 2850, 0, 0.66);
+        sotfCalculator.addTableEntry(2.32, 2950, 0, 0.83);
+        sotfCalculator.addTableEntry(2.68, 3000, 0, 0.88);
+        sotfCalculator.addTableEntry(3.08, 3250, 0, 0.81);
+        sotfCalculator.addTableEntry(3.34, 3400, 0, 1.01);
+        sotfCalculator.addTableEntry(3.85, 3800, 0, 1.04);
+        sotfCalculator.addTableEntry(4.05, 3850, 0, 1.05);
     }
 
     private void registerAutonomousCommands() {
         NamedCommands.registerCommand("Shooter", new ShooterRevamp(shooter).withTimeout(2));
         NamedCommands.registerCommand("Index", new Index(intake).withTimeout(4));
-        NamedCommands.registerCommand("Shoot Preload", new Shoot(shooter, intake,
-            RobotConstants.kShooterVelocity, RobotConstants.kShootingIndexSpeed).withTimeout(5));
+        NamedCommands.registerCommand("Shoot Preload",
+                new Shoot(shooter, intake, RobotConstants.kShootingIndexSpeed).withTimeout(5));
 
         NamedCommands.registerCommand("Stop", new StopMotors(shooter, intake));
-        // NamedCommands.registerCommand("Climb",
-        //         new Climb(climb, AutoConstants.kAutoClimbSpeed).withTimeout(3));
 
-        NamedCommands.registerCommand("Intake", new Intake(intake, RobotConstants.kIntakeSpeed));
+        NamedCommands.registerCommand("Intake", new Intake(intake, shooter, RobotConstants.kIntakeSpeed));
 
         NamedCommands.registerCommand("AutoShoot",
-                new ShootOnMove(shooter, intake, robotDrive, sotfCalculator,
+                new AutoShoot(shooter, intake, robotDrive, sotfCalculator,
                     () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
                             OIConstants.kDriveDeadband),
                     () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
                             OIConstants.kDriveDeadband),
                     0.5, 0.02));
-        // NamedCommands.registerCommand("Stop Motors", new InstantCommand(() -> ShooterSubsystem.stop));
     }
 
     /*
@@ -126,18 +128,19 @@ public class RobotContainer {
      * {@link JoystickButton}.
      */
     private void configureButtonBindings() {
-        // Zero the heading when the right stick is pressed
+        // Zero the heading when the right stick is pressed - Reset Field Relative.
         driverController.rightStick().onTrue(new InstantCommand(() -> robotDrive.zeroHeading(), robotDrive));
 
-        // Reduce the speed of the robot when the left trigger is held
+        // Passing
         driverController.leftTrigger()
-                .onTrue(new InstantCommand(() -> robotDrive.setSpeedModifier(0.75), robotDrive))
-                .onFalse(new InstantCommand(() -> robotDrive.setSpeedModifier(1.0), robotDrive));
+                .whileTrue(new SequentialCommandGroup(new ShooterRevamp(shooter).withTimeout(1.1),
+                    new ParallelCommandGroup(new ShooterRevamp(shooter), new Index(intake))));
+        driverController.y().onTrue(new InstantCommand(() -> shooter.updateRPM(4500)));
+        driverController.a().onTrue(new InstantCommand(() -> shooter.updateRPM(3500)));
 
         // Intake controls
-
-        driverController.leftBumper().whileTrue(new Intake(intake, -RobotConstants.kIntakeSpeed));
-        driverController.rightBumper().toggleOnTrue(new Intake(intake, RobotConstants.kIntakeSpeed));
+        driverController.leftBumper().whileTrue(new Intake(intake, shooter, -RobotConstants.kIntakeSpeed));
+        driverController.rightBumper().toggleOnTrue(new Intake(intake, shooter, RobotConstants.kIntakeSpeed));
 
         // Climber controls
         driverController.back().and(driverController.x().negate()).and(driverController.b().negate())
@@ -148,44 +151,23 @@ public class RobotContainer {
         driverController.start().and(driverController.x()).whileTrue(new Hook(climb, -0.2, Hook.Side.Left));
         driverController.back().and(driverController.b()).whileTrue(new Hook(climb, 0.2, Hook.Side.Right));
         driverController.start().and(driverController.b()).whileTrue(new Hook(climb, -0.2, Hook.Side.Right));
-
         LogicTriggers.without(driverController.x(), driverController.back())
                 .whileTrue(new Climb(climb, RobotConstants.kClimbSpeed));
         LogicTriggers.without(driverController.b(), driverController.back())
                 .whileTrue(new Climb(climb, -RobotConstants.kClimbSpeed));
 
-        // Shooter controls 
-        driverController.y().whileTrue(
-                new Shoot(shooter, intake, -RobotConstants.kShooterVelocity, RobotConstants.kIndexingSpeed));
-
-        // driverController.a()
-        //         .whileTrue(new ShootHub(shooter, intake, robotDrive, RobotConstants.kIndexingSpeed));
-
-        // driverController.a().toggleOnTrue(new LockOn(robotDrive, driverController));
-
-        // driverController.rightTrigger().whileTrue(new Shoot(shooter, intake, RobotConstants.kShooterVelocity,
-        //     RobotConstants.kShootingIndexSpeed));
-
-        // driverController.rightTrigger().whileTrue(
-        //         new SequentialCommandGroup(new ShooterRevamp(shooter).withTimeout(2), new Index(intake)))
-        //         .whileFalse(new StopMotors(shooter, intake));
-
-        // driverController.rightTrigger().whileTrue(new ShootAuto(shooter, robotDrive, intake));
-        // driverController.rightTrigger().whileTrue(new ShootHub(shooter, intake, robotDrive, 0.5));
-
-        // driverController.rightTrigger().whileTrue(new Shoot(shooter, intake, 0, 0));
-
+        // Manual RPM Increments - DPAD UP increases RPM Setpoint by 100, DPAD Down decreases RPM Setpoint by 100
         driverController.pov(0).onTrue(new UpdateRPM(shooter, true));
-        // driverController.pov(90).onTrue(new UpdateRPM(shooter, 4300));
         driverController.pov(180).onTrue(new UpdateRPM(shooter, false));
-        // driverController.pov(270).onTrue(new UpdateRPM(shooter, 3200));
+
+        // Auto Shooting. Autoaims to the hub, then autoshoots with autonomously changing rpm. 
         driverController.rightTrigger()
-                .whileTrue(new ShootOnMove(shooter, intake, robotDrive, sotfCalculator,
+                .whileTrue(new AutoShoot(shooter, intake, robotDrive, sotfCalculator,
                     () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
                             OIConstants.kDriveDeadband),
                     () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
                             OIConstants.kDriveDeadband),
-                    0.5, 0.02));
+                    1, 0.02));
 
     }
 
