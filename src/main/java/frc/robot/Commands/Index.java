@@ -23,7 +23,7 @@ public class Index extends Command {
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-        intakeSubsystem.index(.5);
+        intakeSubsystem.index(1);
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -34,6 +34,7 @@ public class Index extends Command {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
+        intakeSubsystem.stopMotors();
     }
 
     // Returns true when the command should end.

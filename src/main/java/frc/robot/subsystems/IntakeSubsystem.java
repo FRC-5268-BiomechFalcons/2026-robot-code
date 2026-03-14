@@ -44,7 +44,5 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     private void updateDashboard(boolean isIntaking) {
-        SmartDashboard.putBoolean("Intaking?", isIntaking);
-        SmartDashboard.putNumber("Indexing Current Draw", indexerMotor.getOutputCurrent());
     }
 }
