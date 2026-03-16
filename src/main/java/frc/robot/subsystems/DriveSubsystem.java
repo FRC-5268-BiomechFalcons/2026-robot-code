@@ -22,7 +22,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -48,11 +47,16 @@ public class DriveSubsystem extends SubsystemBase {
     // Pigeon IMU
     private final PigeonIMU m_gyro = new PigeonIMU(25);
 
+    // Field Widget for the dashboard
     private Field2d field = new Field2d();
+
+    // Quest VR Headset 
     QuestNav questNav = new QuestNav();
 
+    // Variable that tracks whether or not the quest has been resetted
     boolean isResetting = false;
 
+    // Odometry Variable
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
         DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(m_gyro.getYaw()),
         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
@@ -61,9 +65,13 @@ public class DriveSubsystem extends SubsystemBase {
 
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
+
+    // Hub Pose. This changes based off what alliance you are on.
     private Pose3d hub;
+
+    // Limelight String Identifiers
     private static final String shooterLimelight = "limelight-shooter";
-    private static final String leftLimelight = "limelight-left";
+    // private static final String leftLimelight = "limelight-left";
 
     /** Creates a new DriveSubsystem. */
     public DriveSubsystem() {
@@ -76,11 +84,6 @@ public class DriveSubsystem extends SubsystemBase {
                     new PIDConstants(2, 0.0, 0.0)),
                 getRobotConfig(), this::shouldFlipPath, this);
 
-        if (shouldFlipPath()) {
-            hub = FieldConstants.kHubTargetRed;
-        } else {
-            hub = FieldConstants.kHubTargetBlue;
-        }
     }
 
     @Override
@@ -96,16 +99,25 @@ public class DriveSubsystem extends SubsystemBase {
         limelightPoseTracking(shooterLimelight);
         // limelightPoseTracking(leftLimelight);
 
+        // Update the field widget with our new pose
         field.setRobotPose(getPose());
+
+        // Update the dashboard
         SmartDashboard.putData("Field", field);
         SmartDashboard.putData(field);
         SmartDashboard.putNumber("Distance to Hub", getDistanceToHub());
     }
 
+    /**
+     * Updates the odometry's vision measurement using the quest's pose frames. 
+     * This should be called periodically.
+     * 
+     */
     private void questPoseTracking() {
         questNav.commandPeriodic();
 
         if (isResetting) {
+            // Clear buffer and clear any remaining frames when the quest gets reset
             PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
             return;
         }
@@ -135,14 +147,24 @@ public class DriveSubsystem extends SubsystemBase {
         }
     }
 
+    /**
+     * Updates the odometry vision measurement using the Limelight's pose readings.
+     * This should be called periodically.
+     * 
+     * @param limelight The limelight string identifier
+     */
     private void limelightPoseTracking(String limelight) {
         var alliance = DriverStation.getAlliance();
+        // Variable for whether or not we accept the limelight pose measurement
         boolean doRejectUpdate = false;
+
+        // Receiving robot pose depending on which alliance we are in
         LimelightHelpers.PoseEstimate estimatedPose = (alliance.isPresent() &&
             alliance.get() == DriverStation.Alliance.Red)
                     ? LimelightHelpers.getBotPoseEstimate_wpiRed(limelight)
                     : LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
 
+        // Filtering the given pose measurement. Dismissing ambiguous or bad measurements
         if (estimatedPose.tagCount == 1 && estimatedPose.rawFiducials.length == 1) {
             if (estimatedPose.rawFiducials[0].ambiguity > .7) {
                 doRejectUpdate = true;
@@ -156,8 +178,16 @@ public class DriveSubsystem extends SubsystemBase {
         }
 
         if (!doRejectUpdate) {
+            // Updating the vision measurement with the given pose from the limelight
             Pose2d pose = estimatedPose.pose;
             double timestamp = estimatedPose.timestampSeconds;
+
+            /*
+             * The quest is probably going to be more accurate than the limelight so the limelight
+             * values are set a little higher than the quest. The higher the number, the less the
+             * pose estimator trusts it. For the same reason as the quest, the pigeon should
+             * probably be
+             */
             var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
                     0.50, // y meters
                     1 // theta (ignore)
@@ -166,14 +196,14 @@ public class DriveSubsystem extends SubsystemBase {
             m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
         }
 
-        /*
-         * The quest is probably going to be more accurate than the limelight so the limelight
-         * values are set a little higher than the quest. The higher the number, the less the pose
-         * estimator trusts it. For the same reason as the quest, the pigeon should probably be
-         */
-
     }
 
+    /**
+     * Fetches Pathplanner GUI settings. 
+     * This should be applied in AutoBuilder for configuring pathplanner
+     * 
+     * @return Robot configuration settings from the pathplanner GUI.
+     */
     public RobotConfig getRobotConfig() {
         try {
             return RobotConfig.fromGUISettings();
@@ -183,6 +213,14 @@ public class DriveSubsystem extends SubsystemBase {
         }
     }
 
+    /**
+     * A helper method for configuring pathplanner. 
+     * The default pathplanner setup is for the blue alliance, 
+       so this checks whether or not we are red to decide to flip our autonomous routine.
+     * This should be applied in AutoBuilder for configuring pathplanner.
+     * 
+     * @return boolean - whether or not we should flip the auto.
+     */
     public boolean shouldFlipPath() {
         var alliance = DriverStation.getAlliance();
         if (alliance.get() == DriverStation.Alliance.Red) {
@@ -192,6 +230,11 @@ public class DriveSubsystem extends SubsystemBase {
         }
     }
 
+    /**
+     * Uses kinematics to convert our swerve module states to robot relative ChassisSpeeds.
+     * 
+     * @return Robot Relative ChassisSpeeds 
+     */
     public ChassisSpeeds getRobotRelativeSpeeds() {
         return DriveConstants.kDriveKinematics.toChassisSpeeds(m_frontLeft.getState(),
                 m_frontRight.getState(), m_rearLeft.getState(), m_rearRight.getState());
@@ -212,8 +255,6 @@ public class DriveSubsystem extends SubsystemBase {
      * @param pose The pose to which to set the odometry.
      */
     public void resetOdometry(Pose2d pose) {
-
-        // Pigeon IMU
         m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw()),
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() },
@@ -222,6 +263,11 @@ public class DriveSubsystem extends SubsystemBase {
         resetQuest(pose);
     }
 
+    /**
+     * Resets the quest's odometry. This should be called if you are resetting the robot's odometry.
+     * 
+     * @param pose The current Pose2d of the robot.
+     */
     public void resetQuest(Pose2d pose) {
         Pose3d pose3d = new Pose3d(pose);
         questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
@@ -301,9 +347,6 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the robot's heading in degrees, from -180 to 180
      */
     public double getHeading() {
-        // return Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)).getDegrees();
-
-        // PIGEON IMU
         return Rotation2d.fromDegrees(m_gyro.getYaw()).getDegrees();
     }
 
@@ -329,32 +372,26 @@ public class DriveSubsystem extends SubsystemBase {
         m_speedModifier = Math.max(0.0, Math.min(1.0, modifier));
     }
 
-    public double getHubVectorAngle() {
-        Pose3d pos = new Pose3d(getPose());
-        Pose3d translation = pos.relativeTo(hub);
-        return Math.toDegrees(Math.atan2(translation.getY(), translation.getX()));
+    /**
+     * Fetches the robot's field relative velocity by convering it from robot relative velocity.
+     * 
+     * @return a Translation2d of the robot's x and y field relative speeds
+     */
+    public Translation2d getFieldRelativeVelocity() {
+        ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
+        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds,
+                Rotation2d.fromDegrees(getHeading()));
+
+        return new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond,
+            fieldRelativeSpeeds.vyMetersPerSecond);
     }
 
-    public double findProjectileTrajectoryVelocity() {
-        double heightDifference = Constants.FieldConstants.kHubHeight - Units.inchesToMeters(20);
-        double g = 9.81; // Acceleration due to gravity in m/s^2
-        double angleRadians = Math.toRadians(Constants.RobotConstants.kShooterAngle);
-        Pose3d pos = new Pose3d(getPose());
-        Pose3d translation = pos.relativeTo(hub);
-        double d = Math.sqrt(Math.pow(translation.getX(), 2) + Math.pow(translation.getY(), 2)); // distance to hub
-
-        // Using the projectile motion formula to calculate initial velocity
-        double numerator = g * d * d;
-        double denominator = 2 * (heightDifference - d * Math.tan(angleRadians)) *
-            Math.pow(Math.cos(angleRadians), 2);
-
-        if (denominator <= 0) {
-            return 0; // No valid solution
-        }
-
-        return Math.sqrt(numerator / denominator);
-    }
-
+    /**
+     * This is exclusive for the 2026 FRC Game - Rebuilt.
+     * Fetches the distance to the hub using the robot's pose and the hub pose.
+     * 
+     * @return distance, in meters, to the center of the hub
+     */
     public double getDistanceToHub() {
         Pose3d pos = new Pose3d(getPose());
         Pose3d translation = pos.relativeTo(hub);
@@ -363,17 +400,26 @@ public class DriveSubsystem extends SubsystemBase {
         return d;
     }
 
+    /**
+     * This is exclusively for the 2026 FRC Game - Rebuilt
+     * Fetches the pose of the hub, regardless of alliance.
+     * 
+     * @return a Pose3d of the hub's location on the field.
+     */
     public Pose3d getHubPose() {
         return hub;
     }
 
-    public Translation2d getFieldRelativeVelocity() {
-        ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
-        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds,
-                Rotation2d.fromDegrees(getHeading()));
-
-        return new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond,
-            fieldRelativeSpeeds.vyMetersPerSecond);
+    /**
+     * This is exclusively for the 2026 FRC Game - Rebuilt.
+     * Sets the hub pose depending on what alliance we are in.
+     */
+    public void setHubPose() {
+        if (shouldFlipPath()) {
+            hub = FieldConstants.kHubTargetRed;
+        } else {
+            hub = FieldConstants.kHubTargetBlue;
+        }
     }
 
 }

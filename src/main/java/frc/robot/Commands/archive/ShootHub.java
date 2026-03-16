@@ -1,7 +1,6 @@
 package frc.robot.Commands.archive;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -39,11 +38,11 @@ public class ShootHub extends Command {
     public void execute() {
         // double rot = rotController.calculate(driveSubsystem.getHeading());
         // driveSubsystem.drive(0, 0, rot, false);
-        hubVector = driveSubsystem.getHubVectorAngle();
-        goalRpm = (60 * driveSubsystem.findProjectileTrajectoryVelocity()) /
-            (2 * Math.PI * Constants.RobotConstants.kShooterRadius);
+        // hubVector = driveSubsystem.getHubVectorAngle();
+        // goalRpm = (60 * driveSubsystem.findProjectileTrajectoryVelocity()) /
+        // (2 * Math.PI * Constants.RobotConstants.kShooterRadius);
         shooter.updateRPM(goalRpm);
-        shooter.setSetpoint();
+        shooter.shoot();
 
         if (shooter.hitRPMSetpoint()) {
             intakeSubsystem.index(indexSpeed);

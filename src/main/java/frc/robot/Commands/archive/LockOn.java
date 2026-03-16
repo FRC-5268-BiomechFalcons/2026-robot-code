@@ -26,7 +26,7 @@ public class LockOn extends Command {
 
     @Override
     public void execute() {
-        hubVector = driveSubsystem.getHubVectorAngle();
+        // hubVector = driveSubsystem.getHubVectorAngle();
         System.out.println(hubVector);
         rotController.setSetpoint(hubVector);
         double rot = rotController.calculate(driveSubsystem.getHeading());

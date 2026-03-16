@@ -4,9 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -36,6 +33,7 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         robotContainer = new RobotContainer();
 
+        // Adding all the autonomous options to the dashboard's auto selecter
         autoChooser.addOption("Drive Straight", robotContainer.driveStraightAuto());
         autoChooser.addOption("Shoot Preload Then Climb", robotContainer.shootThenClimbAuto());
         autoChooser.addOption("Shoot Preload", robotContainer.shootPreloadAuto());
@@ -54,10 +52,12 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-        // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
-        // commands, running already-scheduled commands, removing finished or interrupted commands,
-        // and running subsystem periodic() methods.  This must be called from the robot's periodic
-        // block in order for anything in the Command-based framework to work.
+        /*
+         * Runs the Scheduler. This is responsible for polling buttons, adding newly-scheduled
+         * commands, running already-scheduled commands, removing finished or interrupted commands,
+         * and running subsystem periodic() methods. This must be called from the robot's periodic
+         * block in order for anything in the Command-based framework to work.
+         */
         CommandScheduler.getInstance().run();
     }
 
@@ -75,18 +75,9 @@ public class Robot extends TimedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
+        robotContainer.driveSubsystem.setHubPose();
         CommandScheduler.getInstance().schedule(autoChooser.getSelected());
 
-        /*
-         * String autoSelected = SmartDashboard.getString("Auto Selector", "Default");
-         * switch(autoSelected) { case "My Auto": autonomousCommand = new MyAutoCommand(); break;
-         * case "Default Auto": default: autonomousCommand = new ExampleCommand(); break; }
-         */
-
-        // schedule the autonomous command (example)
-        // if (autonomousCommand != null) {
-        //     CommandScheduler.getInstance().schedule(autonomousCommand);
-        // }
     }
 
     /** This function is called periodically during autonomous. */
@@ -96,16 +87,27 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        // This makes sure that the autonomous stops running when
-        // teleop starts running. If you want the autonomous to
-        // continue until interrupted by another command, remove
-        // this line or comment it out.
+        /*
+         * This makes sure that the autonomous stops running when teleop starts running. If you want
+         * the autonomous to continue until interrupted by another command, remove this line or
+         * comment it out.
+         */
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
 
-        robotContainer.shooter.updateRPM(3500);
-        // robotContainer.robotDrive
+        // Setting the hub pose based off the alliance we are in.
+        robotContainer.driveSubsystem.setHubPose();
+
+        // Changing the default RPM back to 3500 once teleop starts.
+        robotContainer.shooterSubsystem.updateRPM(3500);
+
+        /*
+         * For testing purposes, this resets the robot's odometry to a known position on the field.
+         * IMPORTANT: Comment it out for competition.
+         */
+
+        // robotContainer.drive
         //         .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
     }
 

@@ -10,8 +10,13 @@ import frc.robot.subsystems.ClimbSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class Hook extends Command {
+    // Climb subsystem to control the hook motors
     ClimbSubsystem climbSubsystem;
+
+    // Hook speed
     double speed;
+
+    // Determines which hook(s) should be active
     Side activeSide;
 
     public enum Side {
@@ -27,7 +32,10 @@ public class Hook extends Command {
         this.activeSide = activeSide;
     }
 
-    // Called when the command is initially scheduled.
+    /**
+     * Called when the command is initially scheduled.
+     * Starts the hook motor(s) when the command begins.
+     */
     @Override
     public void initialize() {
         switch (activeSide) {
@@ -48,7 +56,10 @@ public class Hook extends Command {
     public void execute() {
     }
 
-    // Called once the command ends or is interrupted.
+    /**
+     * Stops all hook motors when the command ends.
+     * Called once the command ends or is interrupted.
+     */
     @Override
     public void end(boolean interrupted) {
         climbSubsystem.stopHook();

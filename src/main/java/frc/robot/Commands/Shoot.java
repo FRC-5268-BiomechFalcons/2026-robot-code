@@ -1,15 +1,19 @@
 package frc.robot.Commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
 
 public class Shoot extends Command {
+    // Subsystems 
     ShooterSubsystem shooter;
     IntakeSubsystem intakeSubsystem;
+
+    // Indexer speed.
     double indexSpeed;
+
+    // Whether or not the RPM setpoint has been hit
     boolean hitRPM;
 
     public Shoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, double indexSpeed) {
@@ -19,21 +23,29 @@ public class Shoot extends Command {
         this.indexSpeed = indexSpeed;
     }
 
+    /**
+     * Run the shooter at the beginning of the command
+     */
     @Override
     public void initialize() {
-        shooter.setSetpoint();
+        shooter.shoot();
         hitRPM = false;
     }
 
+    /**
+     * Once the shooter hits the setpoint, start indexing. 
+     */
     @Override
     public void execute() {
-
         if (shooter.hitRPMSetpoint() && !hitRPM) {
             intakeSubsystem.index(indexSpeed);
             hitRPM = true;
         }
     }
 
+    /**
+     * Stop all motors once the command ends.
+     */
     @Override
     public void end(boolean interrupted) {
         shooter.stopControl();

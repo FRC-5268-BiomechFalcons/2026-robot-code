@@ -7,15 +7,16 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
 public class IntakeSubsystem extends SubsystemBase {
 
+    // Intake Motor
     private final SparkMax intakeMotor = new SparkMax(9, MotorType.kBrushless);
+
+    // Indexer Motor
     private final SparkMax indexerMotor = new SparkMax(8, MotorType.kBrushless);
-    private boolean isIntaking = false;
 
     /** Creates a new Intake. */
     public IntakeSubsystem() {
@@ -23,26 +24,33 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        updateDashboard(isIntaking);
     }
 
+    /**
+     * Runs the intake and indexer motors to intake fuel.
+     * 
+     * @param speed Desired speed of the intake and indexer motors.
+     */
     public void intake(double speed) {
         intakeMotor.set(speed);
         indexerMotor.set(speed);
-        isIntaking = true;
     }
 
+    /**
+    * Runs the intake and indexer motors to index fuel.
+    * 
+    * @param speed Desired speed of the intake and indexer motors.
+    */
     public void index(double speed) {
         intakeMotor.set(speed);
         indexerMotor.set(-speed);
     }
 
+    /**
+     * Stops the intake and indexer motors.
+     */
     public void stopMotors() {
         indexerMotor.set(0);
         intakeMotor.set(0);
-        isIntaking = false;
-    }
-
-    private void updateDashboard(boolean isIntaking) {
     }
 }
