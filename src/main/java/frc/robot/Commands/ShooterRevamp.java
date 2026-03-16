@@ -10,6 +10,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ShooterRevamp extends Command {
+    // Shooter subsystem to run the shooter
     ShooterSubsystem shooterSubsystem;
 
     /** Creates a new ShooterRevamp. */
@@ -19,10 +20,13 @@ public class ShooterRevamp extends Command {
         // Use addRequirements() here to declare subsystem dependencies.
     }
 
-    // Called when the command is initially scheduled.
+    /**
+     * Called when the command is initally scheduled.
+     * Run the shooter at the start of the command
+     */
     @Override
     public void initialize() {
-        shooterSubsystem.setSetpoint();
+        shooterSubsystem.shoot();
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -30,9 +34,13 @@ public class ShooterRevamp extends Command {
     public void execute() {
     }
 
-    // Called once the command ends or is interrupted.
+    /**
+     * Called once the command ends or is interrupted.
+     * Stop the shooter at the end of the command
+     */
     @Override
     public void end(boolean interrupted) {
+        // 
         shooterSubsystem.stopControl();
     }
 

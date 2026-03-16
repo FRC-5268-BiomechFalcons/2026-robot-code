@@ -10,6 +10,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class Index extends Command {
+    // Intake subsystem to index motors
     IntakeSubsystem intakeSubsystem;
 
     /** Creates a new Index. */
@@ -20,7 +21,10 @@ public class Index extends Command {
         // Use addRequirements() here to declare subsystem dependencies.
     }
 
-    // Called when the command is initially scheduled.
+    /**
+     * Called when the command is initially scheduled.
+     * Runs the indexer at 100%
+     */
     @Override
     public void initialize() {
         intakeSubsystem.index(1);
@@ -31,7 +35,10 @@ public class Index extends Command {
     public void execute() {
     }
 
-    // Called once the command ends or is interrupted.
+    /**
+     * Called once the command ends or is interrupted.
+     * Stops all motors when the command ends.
+     */
     @Override
     public void end(boolean interrupted) {
         intakeSubsystem.stopMotors();

@@ -12,6 +12,10 @@ import frc.robot.subsystems.ShooterSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+/**
+ * This instant command is entirely used for auto.
+ * Stops all motors.
+ */
 public class StopMotors extends InstantCommand {
     ShooterSubsystem shooterSubsystem;
     IntakeSubsystem intakeSubsystem;
@@ -23,6 +27,9 @@ public class StopMotors extends InstantCommand {
         this.intakeSubsystem = intakeSubsystem;
     }
 
+    /**
+     * Stops all motors.
+     */
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {

@@ -21,7 +21,10 @@ public class Climb extends Command {
         this.speed = speed;
     }
 
-    // Called when the command is initially scheduled.
+    /**
+     * Called when the command is initially scheduled.
+     * Run the climber at a specific speed.
+     */
     @Override
     public void initialize() {
         climbSubsystem.runClimber(speed);
@@ -32,7 +35,10 @@ public class Climb extends Command {
     public void execute() {
     }
 
-    // Called once the command ends or is interrupted.
+    /**
+     * Called once the command ends or is interrupted.
+     * Stop the climber once the command ends.
+     */
     @Override
     public void end(boolean interrupted) {
         climbSubsystem.stopClimber();
