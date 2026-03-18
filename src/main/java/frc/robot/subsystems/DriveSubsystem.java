@@ -67,11 +67,11 @@ public class DriveSubsystem extends SubsystemBase {
     private double m_speedModifier = 1.0;
 
     // Hub Pose. This changes based off what alliance you are on.
-    private Pose3d hub;
+    private Pose3d hub = new Pose3d();
 
     // Limelight String Identifiers
     private static final String shooterLimelight = "limelight-shooter";
-    // private static final String leftLimelight = "limelight-left";
+    private static final String leftLimelight = "limelight-left";
 
     /** Creates a new DriveSubsystem. */
     public DriveSubsystem() {
@@ -97,7 +97,7 @@ public class DriveSubsystem extends SubsystemBase {
         // VISION POSE TRACKING - QUEST + 2 LIMELIGHTS
         questPoseTracking();
         limelightPoseTracking(shooterLimelight);
-        // limelightPoseTracking(leftLimelight);
+        limelightPoseTracking(leftLimelight);
 
         // Update the field widget with our new pose
         field.setRobotPose(getPose());
@@ -119,6 +119,9 @@ public class DriveSubsystem extends SubsystemBase {
         if (isResetting) {
             // Clear buffer and clear any remaining frames when the quest gets reset
             PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
+            if (poseFrames.length > 0) {
+                isResetting = false;
+            }
             return;
         }
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
@@ -138,10 +141,11 @@ public class DriveSubsystem extends SubsystemBase {
              */
             var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.05, // x meters
                     0.05, // y meters
-                    1 // theta (radians)
+                    99999 // theta (radians)
             );
 
-            m_odometry.addVisionMeasurement(robotPose2d, last.dataTimestamp(), questStdDevs);
+            m_odometry.addVisionMeasurement(last.questPose3d().toPose2d(), last.dataTimestamp(),
+                    questStdDevs);
         } else {
             SmartDashboard.putBoolean("Quest State", false);
         }
@@ -194,6 +198,9 @@ public class DriveSubsystem extends SubsystemBase {
             );
 
             m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
+            if (estimatedPose.tagCount >= 2) {
+                resetQuest(estimatedPose.pose);
+            }
         }
 
     }

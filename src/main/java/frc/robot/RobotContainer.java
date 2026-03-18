@@ -18,15 +18,15 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Commands.AutoShoot;
-import frc.robot.Commands.Climb;
-import frc.robot.Commands.Hook;
+// import frc.robot.Commands.Climb;
+// import frc.robot.Commands.Hook;
 import frc.robot.Commands.Index;
 import frc.robot.Commands.Intake;
 import frc.robot.Commands.Shoot;
 import frc.robot.Commands.ShooterRevamp;
 import frc.robot.Commands.StopMotors;
 import frc.robot.Commands.UpdateRPM;
-import frc.robot.subsystems.ClimbSubsystem;
+// import frc.robot.subsystems.ClimbSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -45,7 +45,7 @@ public class RobotContainer {
     public DriveSubsystem driveSubsystem = new DriveSubsystem();
     public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
     public IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-    public ClimbSubsystem climbSubsystem = new ClimbSubsystem();
+    // public ClimbSubsystem climbSubsystem = new ClimbSubsystem();
 
     // The driver's controller
     CommandXboxController driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
@@ -135,22 +135,22 @@ public class RobotContainer {
                 .toggleOnTrue(new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed));
 
         // Climber controls
-        driverController.back().and(driverController.x().negate()).and(driverController.b().negate())
-                .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Both));
-        driverController.start().and(driverController.x().negate()).and(driverController.b().negate())
-                .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Both));
-        driverController.back().and(driverController.x())
-                .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Left));
-        driverController.start().and(driverController.x())
-                .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Left));
-        driverController.back().and(driverController.b())
-                .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Right));
-        driverController.start().and(driverController.b())
-                .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Right));
-        LogicTriggers.without(driverController.x(), driverController.back())
-                .whileTrue(new Climb(climbSubsystem, RobotConstants.kClimbSpeed));
-        LogicTriggers.without(driverController.b(), driverController.back())
-                .whileTrue(new Climb(climbSubsystem, -RobotConstants.kClimbSpeed));
+        // driverController.back().and(driverController.x().negate()).and(driverController.b().negate())
+        //         .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Both));
+        // driverController.start().and(driverController.x().negate()).and(driverController.b().negate())
+        //         .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Both));
+        // driverController.back().and(driverController.x())
+        //         .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Left));
+        // driverController.start().and(driverController.x())
+        //         .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Left));
+        // driverController.back().and(driverController.b())
+        //         .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Right));
+        // driverController.start().and(driverController.b())
+        //         .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Right));
+        // LogicTriggers.without(driverController.x(), driverController.back())
+        //         .whileTrue(new Climb(climbSubsystem, RobotConstants.kClimbSpeed));
+        // LogicTriggers.without(driverController.b(), driverController.back())
+        //         .whileTrue(new Climb(climbSubsystem, -RobotConstants.kClimbSpeed));
 
         // Manual RPM Increments - DPAD UP increases RPM Setpoint by 100, DPAD Down decreases RPM Setpoint by 100
         driverController.pov(0).onTrue(new UpdateRPM(shooterSubsystem, true));
@@ -209,6 +209,15 @@ public class RobotContainer {
     public Command shootThenClimbAuto() {
         try {
             return new PathPlannerAuto("Shoot Preload Then Climb");
+        } catch (Exception e) {
+            System.out.println("Error " + e);
+            return Commands.none();
+        }
+    }
+
+    public Command rightTwoSwipe() {
+        try {
+            return new PathPlannerAuto("RIGHT 2 Swipe");
         } catch (Exception e) {
             System.out.println("Error " + e);
             return Commands.none();
