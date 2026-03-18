@@ -9,6 +9,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 
 
 /**
@@ -39,6 +42,7 @@ public class Robot extends TimedRobot {
         autoChooser.addOption("Shoot Preload", robotContainer.shootPreloadAuto());
         autoChooser.addOption("Left 1 Swipe + Climb", robotContainer.leftOneSwipeAndClimb());
         autoChooser.addOption("Left 2 Swipe + Climb", robotContainer.leftTwoSwipeAndClimb());
+        autoChooser.addOption("Right 2 Swipe", robotContainer.rightTwoSwipe());
 
         SmartDashboard.putData(autoChooser);
     }
@@ -107,7 +111,7 @@ public class Robot extends TimedRobot {
          * IMPORTANT: Comment it out for competition.
          */
 
-        // robotContainer.drive
+        // robotContainer.driveSubsystem
         //         .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
     }
 

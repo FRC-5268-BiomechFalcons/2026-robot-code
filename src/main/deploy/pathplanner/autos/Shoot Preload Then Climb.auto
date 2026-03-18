@@ -21,12 +21,6 @@
           "data": {
             "pathName": "ShootThenClimb 2"
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Climb"
-          }
         }
       ]
     }
