@@ -26,10 +26,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
-import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
 
@@ -66,9 +64,6 @@ public class DriveSubsystem extends SubsystemBase {
     // Percent of max speed, used for fine control
     private double m_speedModifier = 1.0;
 
-    // Hub Pose. This changes based off what alliance you are on.
-    private Pose3d hub = new Pose3d();
-
     // Limelight String Identifiers
     private static final String shooterLimelight = "limelight-shooter";
     private static final String leftLimelight = "limelight-left";
@@ -95,7 +90,7 @@ public class DriveSubsystem extends SubsystemBase {
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
         // VISION POSE TRACKING - QUEST + 2 LIMELIGHTS
-        questPoseTracking();
+        // questPoseTracking();
         limelightPoseTracking(shooterLimelight);
         limelightPoseTracking(leftLimelight);
 
@@ -113,43 +108,43 @@ public class DriveSubsystem extends SubsystemBase {
      * This should be called periodically.
      * 
      */
-    private void questPoseTracking() {
-        questNav.commandPeriodic();
+    // private void questPoseTracking() {
+    //     questNav.commandPeriodic();
 
-        if (isResetting) {
-            // Clear buffer and clear any remaining frames when the quest gets reset
-            PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
-            if (poseFrames.length > 0) {
-                isResetting = false;
-            }
-            return;
-        }
-        PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
+    //     if (isResetting) {
+    //         // Clear buffer and clear any remaining frames when the quest gets reset
+    //         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
+    //         if (poseFrames.length > 0) {
+    //             isResetting = false;
+    //         }
+    //         return;
+    //     }
+    //     PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 
-        if (poseFrames.length > 0) {
-            SmartDashboard.putBoolean("Quest State", true);
-            PoseFrame last = poseFrames[poseFrames.length - 1];
+    //     if (poseFrames.length > 0) {
+    //         SmartDashboard.putBoolean("Quest State", true);
+    //         PoseFrame last = poseFrames[poseFrames.length - 1];
 
-            Pose3d questPose = last.questPose3d();
-            Pose2d robotPose2d = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse())
-                    .toPose2d();
+    //         Pose3d questPose = last.questPose3d();
+    //         Pose2d robotPose2d = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse())
+    //                 .toPose2d();
 
-            /*
-             * The higher the number, the less we trust the quest for that thing. So in this case,
-             * we want to trust the quest for x and y, but we do not want to trust the quest on the
-             * robot heading because the pigeon is probably more accurate
-             */
-            var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.05, // x meters
-                    0.05, // y meters
-                    99999 // theta (radians)
-            );
+    //         /*
+    //          * The higher the number, the less we trust the quest for that thing. So in this case,
+    //          * we want to trust the quest for x and y, but we do not want to trust the quest on the
+    //          * robot heading because the pigeon is probably more accurate
+    //          */
+    //         var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.05, // x meters
+    //                 0.05, // y meters
+    //                 99999 // theta (radians)
+    //         );
 
-            m_odometry.addVisionMeasurement(last.questPose3d().toPose2d(), last.dataTimestamp(),
-                    questStdDevs);
-        } else {
-            SmartDashboard.putBoolean("Quest State", false);
-        }
-    }
+    //         m_odometry.addVisionMeasurement(last.questPose3d().toPose2d(), last.dataTimestamp(),
+    //                 questStdDevs);
+    //     } else {
+    //         SmartDashboard.putBoolean("Quest State", false);
+    //     }
+    // }
 
     /**
      * Updates the odometry vision measurement using the Limelight's pose readings.
@@ -198,9 +193,6 @@ public class DriveSubsystem extends SubsystemBase {
             );
 
             m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
-            if (estimatedPose.tagCount >= 2) {
-                resetQuest(estimatedPose.pose);
-            }
         }
 
     }
@@ -267,7 +259,7 @@ public class DriveSubsystem extends SubsystemBase {
                         m_rearLeft.getPosition(), m_rearRight.getPosition() },
                 pose);
 
-        resetQuest(pose);
+        // resetQuest(pose);
     }
 
     /**
@@ -275,12 +267,12 @@ public class DriveSubsystem extends SubsystemBase {
      * 
      * @param pose The current Pose2d of the robot.
      */
-    public void resetQuest(Pose2d pose) {
-        Pose3d pose3d = new Pose3d(pose);
-        questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
+    // public void resetQuest(Pose2d pose) {
+    //     Pose3d pose3d = new Pose3d(pose);
+    //     questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
 
-        isResetting = true;
-    }
+    //     isResetting = true;
+    // }
 
     /**
      * Method to drive the robot using joystick info.
@@ -401,7 +393,7 @@ public class DriveSubsystem extends SubsystemBase {
      */
     public double getDistanceToHub() {
         Pose3d pos = new Pose3d(getPose());
-        Pose3d translation = pos.relativeTo(hub);
+        Pose3d translation = pos.relativeTo(getHubPose());
         double d = Math.sqrt(Math.pow(translation.getX(), 2) + Math.pow(translation.getY(), 2));
 
         return d;
@@ -414,19 +406,10 @@ public class DriveSubsystem extends SubsystemBase {
      * @return a Pose3d of the hub's location on the field.
      */
     public Pose3d getHubPose() {
-        return hub;
-    }
-
-    /**
-     * This is exclusively for the 2026 FRC Game - Rebuilt.
-     * Sets the hub pose depending on what alliance we are in.
-     */
-    public void setHubPose() {
         if (shouldFlipPath()) {
-            hub = FieldConstants.kHubTargetRed;
+            return FieldConstants.kHubTargetRed;
         } else {
-            hub = FieldConstants.kHubTargetBlue;
+            return FieldConstants.kHubTargetBlue;
         }
     }
-
 }

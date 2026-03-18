@@ -9,9 +9,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 
 
 /**
@@ -79,9 +76,11 @@ public class Robot extends TimedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
-        robotContainer.driveSubsystem.setHubPose();
-        CommandScheduler.getInstance().schedule(autoChooser.getSelected());
+        autonomousCommand = autoChooser.getSelected();
 
+        if (autonomousCommand != null) {
+            CommandScheduler.getInstance().schedule(autonomousCommand);
+        }
     }
 
     /** This function is called periodically during autonomous. */
@@ -99,9 +98,6 @@ public class Robot extends TimedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
-
-        // Setting the hub pose based off the alliance we are in.
-        robotContainer.driveSubsystem.setHubPose();
 
         // Changing the default RPM back to 3500 once teleop starts.
         robotContainer.shooterSubsystem.updateRPM(3500);

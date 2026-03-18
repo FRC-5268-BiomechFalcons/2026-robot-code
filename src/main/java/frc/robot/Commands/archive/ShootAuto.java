@@ -23,6 +23,7 @@ public class ShootAuto extends Command {
         this.shooter = shooter;
         this.drive = drive;
         this.intake = intake;
+        addRequirements(shooter, drive, intake);
     }
 
     // Called when the command is initially scheduled.
