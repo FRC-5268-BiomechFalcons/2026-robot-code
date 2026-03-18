@@ -39,6 +39,8 @@ public class Intake extends Command {
     public void end(boolean interrupted) {
         intakeSubsystem.stopMotors();
         shooterSubsystem.stopControl();
+        // Resetting RPM back to default. 
+        shooterSubsystem.updateRPM(3500);
     }
 
 }
