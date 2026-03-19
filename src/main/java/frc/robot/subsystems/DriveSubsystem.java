@@ -101,6 +101,7 @@ public class DriveSubsystem extends SubsystemBase {
         SmartDashboard.putData("Field", field);
         SmartDashboard.putData(field);
         SmartDashboard.putNumber("Distance to Hub", getDistanceToHub());
+        SmartDashboard.putNumber("Heading", getHeading());
     }
 
     /**
@@ -154,14 +155,15 @@ public class DriveSubsystem extends SubsystemBase {
      */
     private void limelightPoseTracking(String limelight) {
         var alliance = DriverStation.getAlliance();
+
         // Variable for whether or not we accept the limelight pose measurement
         boolean doRejectUpdate = false;
 
         // Receiving robot pose depending on which alliance we are in
-        LimelightHelpers.PoseEstimate estimatedPose = (alliance.isPresent() &&
-            alliance.get() == DriverStation.Alliance.Red)
-                    ? LimelightHelpers.getBotPoseEstimate_wpiRed(limelight)
-                    : LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
+        // LimelightHelpers.PoseEstimate estimatedPose = (alliance.get() == DriverStation.Alliance.Red)
+        // ? LimelightHelpers.getBotPoseEstimate_wpiRed(limelight)
+        //         : LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
+        LimelightHelpers.PoseEstimate estimatedPose = LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
 
         // Filtering the given pose measurement. Dismissing ambiguous or bad measurements
         if (estimatedPose.tagCount == 1 && estimatedPose.rawFiducials.length == 1) {
@@ -346,7 +348,8 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the robot's heading in degrees, from -180 to 180
      */
     public double getHeading() {
-        return Rotation2d.fromDegrees(m_gyro.getYaw()).getDegrees();
+        // return Rotation2d.fromDegrees(m_gyro.getYaw()).getDegrees();
+        return m_odometry.getEstimatedPosition().getRotation().getDegrees();
     }
 
     /**
