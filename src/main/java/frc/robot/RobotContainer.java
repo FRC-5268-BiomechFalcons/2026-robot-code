@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.Commands.AutoRPM;
 import frc.robot.Commands.AutoShoot;
 // import frc.robot.Commands.Climb;
 // import frc.robot.Commands.Hook;
@@ -164,6 +165,17 @@ public class RobotContainer {
                             OIConstants.kDriveDeadband),
                     1, 0.02));
 
+        driverController.rightTrigger()
+                .whileTrue(new AutoShoot(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator,
+                    () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
+                            OIConstants.kDriveDeadband),
+                    () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
+                            OIConstants.kDriveDeadband),
+                    1, 0.02));
+
+        driverController.x().whileTrue(
+                new AutoRPM(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator, 1, 0.02));
+
     }
 
     /*
@@ -221,5 +233,16 @@ public class RobotContainer {
             System.out.println("Error " + e);
             return Commands.none();
         }
+    }
+
+    /* Command for testing Auto rotation for field cal */
+
+    public Command autoShoot() {
+        return new AutoShoot(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator,
+            () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
+                    OIConstants.kDriveDeadband),
+            () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
+                    OIConstants.kDriveDeadband),
+            1, 0.02);
     }
 }

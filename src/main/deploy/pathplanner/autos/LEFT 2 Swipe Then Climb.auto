@@ -104,12 +104,6 @@
               }
             ]
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "2 Swipe Left 5"
-          }
         }
       ]
     }

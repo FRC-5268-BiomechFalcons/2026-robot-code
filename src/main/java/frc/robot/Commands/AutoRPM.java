@@ -1,10 +1,6 @@
 package frc.robot.Commands;
 
-import java.util.function.DoubleSupplier;
-
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -17,16 +13,12 @@ import frc.robot.util.ShootOnTheFlyCalculator;;
 /**
  * Autonomously rotates to face the hub and shoots fuel at a calculated RPM based off where the robot is located.
  */
-public class AutoShoot extends Command {
+public class AutoRPM extends Command {
     // Subsystems
     private final ShooterSubsystem shooter;
     private final IntakeSubsystem intakeSubsystem;
     private final DriveSubsystem driveSubsystem;
     private final ShootOnTheFlyCalculator sotf;
-
-    // Driver controlled inputs for x and y
-    private final DoubleSupplier xSupplier;
-    private final DoubleSupplier ySupplier;
 
     private final double indexSpeed;
 
@@ -42,17 +34,13 @@ public class AutoShoot extends Command {
     // Timer for revamping the shooter
     private Timer timer;
 
-    public AutoShoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, DriveSubsystem driveSubsystem,
-            ShootOnTheFlyCalculator sotf, DoubleSupplier xSupplier, DoubleSupplier ySupplier,
-            double indexSpeed, double latencySeconds) {
+    public AutoRPM(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, DriveSubsystem driveSubsystem,
+            ShootOnTheFlyCalculator sotf, double indexSpeed, double latencySeconds) {
 
         this.shooter = shooter;
         this.intakeSubsystem = intakeSubsystem;
         this.driveSubsystem = driveSubsystem;
         this.sotf = sotf;
-
-        this.xSupplier = xSupplier;
-        this.ySupplier = ySupplier;
         this.indexSpeed = indexSpeed;
         this.latencySeconds = latencySeconds;
 
@@ -93,29 +81,13 @@ public class AutoShoot extends Command {
         ShootOnTheFlyCalculator.ShooterCommand cmd = sotf.calculate(robotPos, robotVelField, hubPos,
                 latencySeconds);
 
-        Rotation2d desiredHeading = new Rotation2d();
-
-        // The goal heading to point towards the hub
-        desiredHeading = cmd.robotHeading().plus(Rotation2d.fromDegrees(180));
-
         // Run the shooter at the designated RPM, calculated based on how far it is from the hub.
         double goalRpm = cmd.rpm();
         shooter.updateRPM(goalRpm);
         shooter.shoot();
 
-        // Rotate to face the hub
-        rotController.setSetpoint(desiredHeading.getDegrees());
-        double rot = rotController.calculate(driveSubsystem.getHeading());
-        rot = MathUtil.clamp(rot, -1.0, 1.0);
-
-        // Allow the driver to keep moving in the x and y direction 
-        double x = MathUtil.clamp(xSupplier.getAsDouble(), -1.0, 1.0);
-        double y = MathUtil.clamp(ySupplier.getAsDouble(), -1.0, 1.0);
-
-        driveSubsystem.drive(x, y, rot, true);
-
         // Once we revamp the shooter (1.2 seconds) and once the robot faces the hub, index the fuel.
-        if ((shooter.hitRPMSetpoint() && rotController.atSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
+        if ((shooter.hitRPMSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
         } else {
