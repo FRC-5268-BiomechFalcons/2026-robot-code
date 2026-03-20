@@ -42,6 +42,10 @@ public class AutoShoot extends Command {
     // Timer for revamping the shooter
     private Timer timer;
 
+    private Timer wiggleTimer;
+
+    private final double wigglesPerSecond = 6;
+
     public AutoShoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, DriveSubsystem driveSubsystem,
             ShootOnTheFlyCalculator sotf, DoubleSupplier xSupplier, DoubleSupplier ySupplier,
             double indexSpeed, double latencySeconds) {
@@ -64,6 +68,7 @@ public class AutoShoot extends Command {
 
         this.hitRPM = false;
         this.timer = new Timer();
+        this.wiggleTimer = new Timer();
     }
 
     /**
@@ -73,6 +78,9 @@ public class AutoShoot extends Command {
     public void initialize() {
         timer.reset();
         timer.start();
+
+        wiggleTimer.reset();
+        wiggleTimer.start();
     }
 
     /**
@@ -104,23 +112,29 @@ public class AutoShoot extends Command {
         shooter.shoot();
 
         // Rotate to face the hub
-        rotController.setSetpoint(desiredHeading.getDegrees());
-        double rot = rotController.calculate(driveSubsystem.getHeading());
-        rot = MathUtil.clamp(rot, -1.0, 1.0);
 
         // Allow the driver to keep moving in the x and y direction 
         double x = MathUtil.clamp(xSupplier.getAsDouble(), -1.0, 1.0);
         double y = MathUtil.clamp(ySupplier.getAsDouble(), -1.0, 1.0);
 
-        driveSubsystem.drive(x, y, rot, true);
-
         // Once we revamp the shooter (1.2 seconds) and once the robot faces the hub, index the fuel.
         if ((shooter.hitRPMSetpoint() && rotController.atSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
+
+            double offset = 2 * Math.sin(2 * Math.PI * wigglesPerSecond * wiggleTimer.get());
+
+            rotController.setSetpoint(desiredHeading.getDegrees() + offset);
+
         } else {
-            intakeSubsystem.stopMotors();
+            intakeSubsystem.index(-indexSpeed / 2);
+            rotController.setSetpoint(desiredHeading.getDegrees());
         }
+
+        double rot = rotController.calculate(driveSubsystem.getHeading());
+        rot = MathUtil.clamp(rot, -1.0, 1.0);
+        driveSubsystem.drive(x, y, rot, true);
+
     }
 
     /**

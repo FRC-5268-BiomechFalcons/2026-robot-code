@@ -33,6 +33,7 @@ public class AutoRPM extends Command {
 
     // Timer for revamping the shooter
     private Timer timer;
+    private double direction;
 
     public AutoRPM(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, DriveSubsystem driveSubsystem,
             ShootOnTheFlyCalculator sotf, double indexSpeed, double latencySeconds) {
@@ -43,6 +44,7 @@ public class AutoRPM extends Command {
         this.sotf = sotf;
         this.indexSpeed = indexSpeed;
         this.latencySeconds = latencySeconds;
+        this.direction = 1;
 
         addRequirements(shooter, intakeSubsystem, driveSubsystem);
 
@@ -90,8 +92,9 @@ public class AutoRPM extends Command {
         if ((shooter.hitRPMSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
+
         } else {
-            intakeSubsystem.stopMotors();
+            intakeSubsystem.index(-indexSpeed / 2);
         }
     }
 
