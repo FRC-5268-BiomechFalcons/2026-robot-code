@@ -107,7 +107,7 @@ public class RobotContainer {
                             OIConstants.kDriveDeadband),
                     () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
                             OIConstants.kDriveDeadband),
-                    0.5, 0.02));
+                    1, 0.02));
     }
 
     /*
@@ -134,6 +134,8 @@ public class RobotContainer {
         driverController.rightBumper()
                 .toggleOnTrue(new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed));
 
+        driverController.start().onTrue(new InstantCommand(
+            () -> driveSubsystem.resetOdometry(driveSubsystem.getLimelightEstimatedPose())));
         // Climber controls
         // driverController.back().and(driverController.x().negate()).and(driverController.b().negate())
         //         .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Both));
@@ -157,14 +159,6 @@ public class RobotContainer {
         driverController.pov(180).onTrue(new UpdateRPM(shooterSubsystem, false));
 
         // Auto Shooting. Autoaims to the hub, then autoshoots with autonomously changing rpm. 
-        driverController.rightTrigger()
-                .whileTrue(new AutoShoot(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator,
-                    () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
-                            OIConstants.kDriveDeadband),
-                    () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
-                            OIConstants.kDriveDeadband),
-                    1, 0.02));
-
         driverController.rightTrigger()
                 .whileTrue(new AutoShoot(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator,
                     () -> -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),

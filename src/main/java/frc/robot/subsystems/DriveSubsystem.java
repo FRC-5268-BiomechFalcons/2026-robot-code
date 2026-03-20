@@ -54,6 +54,8 @@ public class DriveSubsystem extends SubsystemBase {
     // Variable that tracks whether or not the quest has been resetted
     boolean isResetting = false;
 
+    Pose2d limelightEstimatedPosition = new Pose2d();
+
     // Odometry Variable
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
         DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(m_gyro.getYaw()),
@@ -194,6 +196,8 @@ public class DriveSubsystem extends SubsystemBase {
                     1 // theta (ignore)
             );
 
+            limelightEstimatedPosition = pose;
+
             m_odometry.addVisionMeasurement(pose, timestamp, limelightStdDevs);
         }
 
@@ -239,6 +243,11 @@ public class DriveSubsystem extends SubsystemBase {
     public ChassisSpeeds getRobotRelativeSpeeds() {
         return DriveConstants.kDriveKinematics.toChassisSpeeds(m_frontLeft.getState(),
                 m_frontRight.getState(), m_rearLeft.getState(), m_rearRight.getState());
+    }
+
+    public Pose2d getLimelightEstimatedPose() {
+        System.out.println("HERE");
+        return limelightEstimatedPosition;
     }
 
     /**
@@ -339,6 +348,11 @@ public class DriveSubsystem extends SubsystemBase {
     /** Zeroes the heading of the robot. */
     public void zeroHeading() {
         m_gyro.setYaw(0);
+        resetOdometry(getPose());
+    }
+
+    public void setHeading(double angleDeg) {
+        m_gyro.setYaw(angleDeg);
         resetOdometry(getPose());
     }
 

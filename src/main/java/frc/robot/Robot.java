@@ -4,11 +4,14 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.Constants.OIConstants;
 
 
 /**
@@ -101,6 +104,20 @@ public class Robot extends TimedRobot {
 
         // Changing the default RPM back to 3500 once teleop starts.
         robotContainer.shooterSubsystem.updateRPM(3500);
+
+        robotContainer.driveSubsystem.setDefaultCommand(
+                // The left stick controls translation of the robot.
+                // Turning is controlled by the X axis of the right stick.
+                new RunCommand(() -> robotContainer.driveSubsystem.drive(
+                        -MathUtil.applyDeadband(Math.pow(robotContainer.driverController.getLeftY(), 3),
+                                OIConstants.kDriveDeadband),
+                        -MathUtil.applyDeadband(Math.pow(robotContainer.driverController.getLeftX(), 3),
+                                OIConstants.kDriveDeadband),
+                        -MathUtil.applyDeadband(Math.pow(robotContainer.driverController.getRightX(), 3),
+                                OIConstants.kDriveDeadband),
+                        true),
+                    robotContainer.driveSubsystem));
+        // robotContainer.driveSubsystem.setHeading(robotContainer.driveSubsystem.getHeading());
 
         /*
          * For testing purposes, this resets the robot's odometry to a known position on the field.
