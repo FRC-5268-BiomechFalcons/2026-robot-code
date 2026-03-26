@@ -69,6 +69,7 @@ public class AutoShoot extends Command {
         this.hitRPM = false;
         this.timer = new Timer();
         this.wiggleTimer = new Timer();
+        // this.agitatorTimer = new Timer();
     }
 
     /**
@@ -81,6 +82,7 @@ public class AutoShoot extends Command {
 
         wiggleTimer.reset();
         wiggleTimer.start();
+
     }
 
     /**
@@ -122,9 +124,11 @@ public class AutoShoot extends Command {
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
 
-            double offset = 2 * Math.sin(2 * Math.PI * wigglesPerSecond * wiggleTimer.get());
+            // double power = Math.sin(2 * Math.PI * wigglesPerSecond * agitatorTimer.get());
 
-            rotController.setSetpoint(desiredHeading.getDegrees() + offset);
+            // rotController.setSetpoint(desiredHeading.getDegrees() + offset);
+            // intakeSubsystem.agitate(power);
+            driveSubsystem.setX();
 
         } else {
             intakeSubsystem.index(-indexSpeed / 2);

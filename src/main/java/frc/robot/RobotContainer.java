@@ -122,9 +122,8 @@ public class RobotContainer {
                 .onTrue(new InstantCommand(() -> driveSubsystem.zeroHeading(), driveSubsystem));
 
         // Passing
-        driverController.leftTrigger().whileTrue(new SequentialCommandGroup(
-            new ShooterRevamp(shooterSubsystem).withTimeout(1.1),
-            new ParallelCommandGroup(new ShooterRevamp(shooterSubsystem), new Index(intakeSubsystem))));
+        driverController.leftTrigger().whileTrue(
+                new AutoRPM(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator, 1, 0.02));
         driverController.y().onTrue(new InstantCommand(() -> shooterSubsystem.updateRPM(4500)));
         driverController.a().onTrue(new InstantCommand(() -> shooterSubsystem.updateRPM(3500)));
 

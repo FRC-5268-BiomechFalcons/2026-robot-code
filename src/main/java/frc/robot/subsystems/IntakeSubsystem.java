@@ -7,6 +7,8 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
+import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
@@ -18,12 +20,17 @@ public class IntakeSubsystem extends SubsystemBase {
     // Indexer Motor
     private final SparkMax indexerMotor = new SparkMax(8, MotorType.kBrushless);
 
+    private final PWMVictorSPX agitatorMotor = new PWMVictorSPX(0);
+
+    private boolean isIntaking;
+
     /** Creates a new Intake. */
     public IntakeSubsystem() {
     }
 
     @Override
     public void periodic() {
+        SmartDashboard.putBoolean("Intaking", isIntaking);
     }
 
     /**
@@ -34,6 +41,12 @@ public class IntakeSubsystem extends SubsystemBase {
     public void intake(double speed) {
         intakeMotor.set(speed);
         indexerMotor.set(speed);
+
+        if (speed < 0) {
+            agitatorMotor.set(0.4);
+        }
+
+        isIntaking = true;
     }
 
     /**
@@ -44,6 +57,16 @@ public class IntakeSubsystem extends SubsystemBase {
     public void index(double speed) {
         intakeMotor.set(speed);
         indexerMotor.set(-speed);
+
+        agitatorMotor.set(0.67);
+    }
+
+    public void agitate(double power) {
+        agitatorMotor.set(power);
+    }
+
+    public void agitatorLeft() {
+        agitatorMotor.set(-0.6);
     }
 
     /**
@@ -52,5 +75,9 @@ public class IntakeSubsystem extends SubsystemBase {
     public void stopMotors() {
         indexerMotor.set(0);
         intakeMotor.set(0);
+
+        agitatorMotor.set(0);
+
+        isIntaking = false;
     }
 }
