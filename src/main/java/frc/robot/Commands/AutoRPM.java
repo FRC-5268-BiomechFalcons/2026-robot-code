@@ -1,5 +1,7 @@
 package frc.robot.Commands;
 
+import com.ctre.phoenix6.signals.System_StateValue;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
@@ -30,6 +32,8 @@ public class AutoRPM extends Command {
 
     // Boolean to check whether or not the goal RPM setpoint was hit
     private boolean hitRPM;
+    private final double agitatesPerSecond = 3;
+    private Timer agitatorTimer;
 
     // Timer for revamping the shooter
     private Timer timer;
@@ -54,6 +58,7 @@ public class AutoRPM extends Command {
 
         this.hitRPM = false;
         this.timer = new Timer();
+        this.agitatorTimer = new Timer();
     }
 
     /**
@@ -63,6 +68,9 @@ public class AutoRPM extends Command {
     public void initialize() {
         timer.reset();
         timer.start();
+
+        agitatorTimer.start();
+        agitatorTimer.reset();
     }
 
     /**
@@ -89,10 +97,16 @@ public class AutoRPM extends Command {
         shooter.shoot();
 
         // Once we revamp the shooter (1.2 seconds) and once the robot faces the hub, index the fuel.
-        if ((shooter.hitRPMSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
+        if ((shooter.hitRPMSetpoint() || hitRPM)) {
+            driveSubsystem.setX();
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
+            // double power = Math.sin(2 * Math.PI * agitatesPerSecond * agitatorTimer.get());
+            // System.out.println(power);
 
+            // // rotController.setSetpoint(desiredHeading.getDegrees() + offset);
+            // intakeSubsystem.agitate(power);
+            intakeSubsystem.agitate(.67);
         } else {
             intakeSubsystem.index(-indexSpeed / 2);
         }
@@ -108,6 +122,8 @@ public class AutoRPM extends Command {
         driveSubsystem.drive(0, 0, 0, false);
         timer.stop();
         timer.reset();
+        agitatorTimer.stop();
+        agitatorTimer.reset();
         hitRPM = false;
     }
 }
