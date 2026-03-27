@@ -13,6 +13,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -26,8 +27,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
+import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
 
@@ -81,6 +84,15 @@ public class DriveSubsystem extends SubsystemBase {
                     new PIDConstants(2, 0.0, 0.0)),
                 getRobotConfig(), this::shouldFlipPath, this);
 
+        questNav.onCommandFailure((resp) -> SmartDashboard.putString("Quest Command Responses",
+                "Quest command failed " + resp));
+        questNav.onCommandSuccess((resp) -> SmartDashboard.putString("Quest Command Responses",
+                "Quest command succeeded " + resp));
+        questNav.onLowBattery(20, (resp) -> SmartDashboard.putString("Quest Command Responses",
+                "QUEST BATTERY LOW " + resp + "%"));
+        questNav.onTrackingAcquired(
+                () -> SmartDashboard.putString("Quest Command Responses", "Tracking Acquired"));
+        questNav.onTrackingLost(() -> SmartDashboard.putString("Quest Command Responses", "Tracking Lost!"));
     }
 
     @Override
@@ -148,6 +160,29 @@ public class DriveSubsystem extends SubsystemBase {
     //         SmartDashboard.putBoolean("Quest State", false);
     //     }
     // }
+
+    private void questPoseTracking() {
+        questNav.commandPeriodic();
+        SmartDashboard.putBoolean("Quest Connection Status", questNav.isConnected());
+        SmartDashboard.putString("Quest Percentage", questNav.getBatteryPercent().toString() + "%");
+
+        if (!questNav.isConnected()) {
+            return;
+        }
+
+        PoseFrame[] newFrames = questNav.getAllUnreadPoseFrames();
+        for (PoseFrame frame : newFrames) {
+            if (frame.isTracking()) {
+                // Add vision measurement to pose estimator
+                m_odometry.addVisionMeasurement(frame.questPose3d().toPose2d(), // Measured pose
+                        frame.dataTimestamp(), // When measurement was taken
+                        VecBuilder.fill(0.1, 0.1, 0.05) // Standard deviations (tune these)
+
+                );
+            }
+        }
+
+    }
 
     /**
      * Updates the odometry vision measurement using the Limelight's pose readings.
@@ -278,12 +313,12 @@ public class DriveSubsystem extends SubsystemBase {
      * 
      * @param pose The current Pose2d of the robot.
      */
-    // public void resetQuest(Pose2d pose) {
-    //     Pose3d pose3d = new Pose3d(pose);
-    //     questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
+    public void resetQuest(Pose2d pose) {
+        Pose3d pose3d = new Pose3d(pose);
+        questNav.setPose(pose3d.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST));
 
-    //     isResetting = true;
-    // }
+        isResetting = true;
+    }
 
     /**
      * Method to drive the robot using joystick info.
