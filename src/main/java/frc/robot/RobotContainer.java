@@ -4,10 +4,13 @@
 
 package frc.robot;
 
+import java.util.function.BooleanSupplier;
+
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -15,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Commands.AutoRPM;
@@ -168,6 +172,14 @@ public class RobotContainer {
 
         driverController.x().whileTrue(
                 new AutoRPM(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator, 1, 0.02));
+
+        // BooleanSupplier shiftEnd = new BooleanSupplier() {
+
+        // };
+
+        Trigger rumble = new Trigger(() -> {
+            return DriverStation.getMatchTime() > 5.0;
+        });
 
     }
 

@@ -44,6 +44,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
         if (speed < 0) {
             agitatorMotor.set(0.4);
+        } else if (speed > 0) {
+            agitatorMotor.set(-0.4);
         }
 
         isIntaking = true;
