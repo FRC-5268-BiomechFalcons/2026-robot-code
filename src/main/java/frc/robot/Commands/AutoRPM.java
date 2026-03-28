@@ -1,7 +1,5 @@
 package frc.robot.Commands;
 
-import com.ctre.phoenix6.signals.System_StateValue;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
@@ -32,12 +30,12 @@ public class AutoRPM extends Command {
 
     // Boolean to check whether or not the goal RPM setpoint was hit
     private boolean hitRPM;
-    private final double agitatesPerSecond = 3;
+    // private final double agitatesPerSecond = 3;
     private Timer agitatorTimer;
 
     // Timer for revamping the shooter
     private Timer timer;
-    private double direction;
+    // private double direction;
 
     public AutoRPM(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, DriveSubsystem driveSubsystem,
             ShootOnTheFlyCalculator sotf, double indexSpeed, double latencySeconds) {
@@ -48,7 +46,7 @@ public class AutoRPM extends Command {
         this.sotf = sotf;
         this.indexSpeed = indexSpeed;
         this.latencySeconds = latencySeconds;
-        this.direction = 1;
+        // this.direction = 1;
 
         addRequirements(shooter, intakeSubsystem, driveSubsystem);
 

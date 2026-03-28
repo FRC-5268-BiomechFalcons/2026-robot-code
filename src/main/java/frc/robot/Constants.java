@@ -117,7 +117,7 @@ public final class Constants {
     public static final class QuestConstants {
         public static final Transform3d ROBOT_TO_QUEST = new Transform3d(Units.inchesToMeters(10.5),
             Units.inchesToMeters(10), Units.inchesToMeters(15.4),
-            new Rotation3d(Units.degreesToRadians(-90), 0.0, Units.degreesToRadians(180)));
+            new Rotation3d(Units.degreesToRadians(-90), 0.0, 0.0));
     }
 
     public static final class MotorConstants {
@@ -137,6 +137,14 @@ public final class Constants {
 
         public static final double kFuelWeight = Units.lbsToKilograms(0.474); // Kg
 
+        public static final double kBlueShooterZoneMinX = 0.0;
+        public static final double kBlueShooterZoneMaxX = 4.0;
+
+        public static final double kRedShooterZoneMinX = 12.5;
+        public static final double kRedShooterZoneMaxX = 16.5;
+
+        public static final double kShooterZoneMinY = 0.0;
+        public static final double kShooterZoneMaxY = 8.1;
     }
 
     public static final class RobotConstants {

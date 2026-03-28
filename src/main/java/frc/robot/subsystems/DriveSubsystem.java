@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.QuestConstants;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
@@ -71,7 +72,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     // Limelight String Identifiers
     private static final String shooterLimelight = "limelight-shooter";
-    private static final String leftLimelight = "limelight-left";
+    private static final String leftLimelight = "limelight";
 
     /** Creates a new DriveSubsystem. */
     public DriveSubsystem() {
@@ -93,6 +94,7 @@ public class DriveSubsystem extends SubsystemBase {
         questNav.onTrackingAcquired(
                 () -> SmartDashboard.putString("Quest Command Responses", "Tracking Acquired"));
         questNav.onTrackingLost(() -> SmartDashboard.putString("Quest Command Responses", "Tracking Lost!"));
+
     }
 
     @Override
@@ -104,7 +106,7 @@ public class DriveSubsystem extends SubsystemBase {
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
         // VISION POSE TRACKING - QUEST + 2 LIMELIGHTS
-        // questPoseTracking();
+        questPoseTracking();
         limelightPoseTracking(shooterLimelight);
         limelightPoseTracking(leftLimelight);
 
@@ -123,48 +125,10 @@ public class DriveSubsystem extends SubsystemBase {
      * This should be called periodically.
      * 
      */
-    // private void questPoseTracking() {
-    //     questNav.commandPeriodic();
-
-    //     if (isResetting) {
-    //         // Clear buffer and clear any remaining frames when the quest gets reset
-    //         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
-    //         if (poseFrames.length > 0) {
-    //             isResetting = false;
-    //         }
-    //         return;
-    //     }
-    //     PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
-
-    //     if (poseFrames.length > 0) {
-    //         SmartDashboard.putBoolean("Quest State", true);
-    //         PoseFrame last = poseFrames[poseFrames.length - 1];
-
-    //         Pose3d questPose = last.questPose3d();
-    //         Pose2d robotPose2d = questPose.transformBy(Constants.QuestConstants.ROBOT_TO_QUEST.inverse())
-    //                 .toPose2d();
-
-    //         /*
-    //          * The higher the number, the less we trust the quest for that thing. So in this case,
-    //          * we want to trust the quest for x and y, but we do not want to trust the quest on the
-    //          * robot heading because the pigeon is probably more accurate
-    //          */
-    //         var questStdDevs = edu.wpi.first.math.VecBuilder.fill(0.05, // x meters
-    //                 0.05, // y meters
-    //                 99999 // theta (radians)
-    //         );
-
-    //         m_odometry.addVisionMeasurement(last.questPose3d().toPose2d(), last.dataTimestamp(),
-    //                 questStdDevs);
-    //     } else {
-    //         SmartDashboard.putBoolean("Quest State", false);
-    //     }
-    // }
-
     private void questPoseTracking() {
         questNav.commandPeriodic();
         SmartDashboard.putBoolean("Quest Connection Status", questNav.isConnected());
-        SmartDashboard.putString("Quest Percentage", questNav.getBatteryPercent().toString() + "%");
+        SmartDashboard.putString("Quest Percentage", questNav.getBatteryPercent().getAsInt() + "%");
 
         if (!questNav.isConnected()) {
             return;
@@ -173,10 +137,12 @@ public class DriveSubsystem extends SubsystemBase {
         PoseFrame[] newFrames = questNav.getAllUnreadPoseFrames();
         for (PoseFrame frame : newFrames) {
             if (frame.isTracking()) {
+                Pose3d rawPose = frame.questPose3d();
+                Pose2d robotPose2d = rawPose.transformBy(QuestConstants.ROBOT_TO_QUEST.inverse()).toPose2d();
                 // Add vision measurement to pose estimator
-                m_odometry.addVisionMeasurement(frame.questPose3d().toPose2d(), // Measured pose
+                m_odometry.addVisionMeasurement(robotPose2d, // Measured pose
                         frame.dataTimestamp(), // When measurement was taken
-                        VecBuilder.fill(0.1, 0.1, 0.05) // Standard deviations (tune these)
+                        VecBuilder.fill(0.1, 0.1, 0.05) // Standard deviations
 
                 );
             }
@@ -191,15 +157,11 @@ public class DriveSubsystem extends SubsystemBase {
      * @param limelight The limelight string identifier
      */
     private void limelightPoseTracking(String limelight) {
-        var alliance = DriverStation.getAlliance();
 
         // Variable for whether or not we accept the limelight pose measurement
         boolean doRejectUpdate = false;
 
         // Receiving robot pose depending on which alliance we are in
-        // LimelightHelpers.PoseEstimate estimatedPose = (alliance.get() == DriverStation.Alliance.Red)
-        // ? LimelightHelpers.getBotPoseEstimate_wpiRed(limelight)
-        //         : LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
         LimelightHelpers.PoseEstimate estimatedPose = LimelightHelpers.getBotPoseEstimate_wpiBlue(limelight);
 
         // Filtering the given pose measurement. Dismissing ambiguous or bad measurements
@@ -220,12 +182,6 @@ public class DriveSubsystem extends SubsystemBase {
             Pose2d pose = estimatedPose.pose;
             double timestamp = estimatedPose.timestampSeconds;
 
-            /*
-             * The quest is probably going to be more accurate than the limelight so the limelight
-             * values are set a little higher than the quest. The higher the number, the less the
-             * pose estimator trusts it. For the same reason as the quest, the pigeon should
-             * probably be
-             */
             var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
                     0.50, // y meters
                     1 // theta (ignore)
@@ -305,7 +261,7 @@ public class DriveSubsystem extends SubsystemBase {
                         m_rearLeft.getPosition(), m_rearRight.getPosition() },
                 pose);
 
-        // resetQuest(pose);
+        resetQuest(pose);
     }
 
     /**

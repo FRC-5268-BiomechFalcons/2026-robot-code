@@ -5,7 +5,9 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -64,6 +66,7 @@ public class Robot extends TimedRobot {
          * block in order for anything in the Command-based framework to work.
          */
         CommandScheduler.getInstance().run();
+        SmartDashboard.putBoolean("Is Hub Active?", robotContainer.isHubActive());
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -119,8 +122,8 @@ public class Robot extends TimedRobot {
                         true),
                     robotContainer.driveSubsystem));
 
-        robotContainer.driveSubsystem
-                .setHeading(robotContainer.driveSubsystem.getPose().getRotation().getDegrees());
+        // robotContainer.driveSubsystem
+        //         .setHeading(robotContainer.driveSubsystem.getPose().getRotation().getDegrees());
         // robotContainer.driveSubsystem.setHeading(robotContainer.driveSubsystem.getHeading());
 
         /*
@@ -128,8 +131,8 @@ public class Robot extends TimedRobot {
          * IMPORTANT: Comment it out for competition.
          */
 
-        // robotContainer.driveSubsystem
-        //         .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
+        robotContainer.driveSubsystem
+                .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
     }
 
     /** This function is called periodically during operator control. */

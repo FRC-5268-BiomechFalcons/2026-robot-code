@@ -44,7 +44,7 @@ public class AutoShoot extends Command {
 
     private Timer wiggleTimer;
 
-    private final double wigglesPerSecond = 6;
+    // private final double wigglesPerSecond = 6;
 
     public AutoShoot(ShooterSubsystem shooter, IntakeSubsystem intakeSubsystem, DriveSubsystem driveSubsystem,
             ShootOnTheFlyCalculator sotf, DoubleSupplier xSupplier, DoubleSupplier ySupplier,
@@ -123,6 +123,7 @@ public class AutoShoot extends Command {
         if ((shooter.hitRPMSetpoint() && rotController.atSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
+            intakeSubsystem.agitate(.67);
 
             // double power = Math.sin(2 * Math.PI * wigglesPerSecond * agitatorTimer.get());
 
