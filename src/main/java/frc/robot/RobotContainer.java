@@ -4,19 +4,19 @@
 
 package frc.robot;
 
-import java.util.function.BooleanSupplier;
+import java.util.Optional;
 
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OIConstants;
@@ -126,8 +126,7 @@ public class RobotContainer {
                 .onTrue(new InstantCommand(() -> driveSubsystem.zeroHeading(), driveSubsystem));
 
         // Passing
-        driverController.leftTrigger().whileTrue(
-                new AutoRPM(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator, 1, 0.02));
+        driverController.leftTrigger().whileTrue(new Shoot(shooterSubsystem, intakeSubsystem, 1));
         driverController.y().onTrue(new InstantCommand(() -> shooterSubsystem.updateRPM(4500)));
         driverController.a().onTrue(new InstantCommand(() -> shooterSubsystem.updateRPM(3500)));
 
@@ -139,23 +138,6 @@ public class RobotContainer {
 
         driverController.start().onTrue(new InstantCommand(
             () -> driveSubsystem.resetOdometry(driveSubsystem.getLimelightEstimatedPose())));
-        // Climber controls
-        // driverController.back().and(driverController.x().negate()).and(driverController.b().negate())
-        //         .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Both));
-        // driverController.start().and(driverController.x().negate()).and(driverController.b().negate())
-        //         .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Both));
-        // driverController.back().and(driverController.x())
-        //         .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Left));
-        // driverController.start().and(driverController.x())
-        //         .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Left));
-        // driverController.back().and(driverController.b())
-        //         .whileTrue(new Hook(climbSubsystem, 0.2, Hook.Side.Right));
-        // driverController.start().and(driverController.b())
-        //         .whileTrue(new Hook(climbSubsystem, -0.2, Hook.Side.Right));
-        // LogicTriggers.without(driverController.x(), driverController.back())
-        //         .whileTrue(new Climb(climbSubsystem, RobotConstants.kClimbSpeed));
-        // LogicTriggers.without(driverController.b(), driverController.back())
-        //         .whileTrue(new Climb(climbSubsystem, -RobotConstants.kClimbSpeed));
 
         // Manual RPM Increments - DPAD UP increases RPM Setpoint by 100, DPAD Down decreases RPM Setpoint by 100
         driverController.pov(0).onTrue(new UpdateRPM(shooterSubsystem, true));
@@ -173,14 +155,10 @@ public class RobotContainer {
         driverController.x().whileTrue(
                 new AutoRPM(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator, 1, 0.02));
 
-        // BooleanSupplier shiftEnd = new BooleanSupplier() {
-
-        // };
-
-        Trigger rumble = new Trigger(() -> {
-            return DriverStation.getMatchTime() > 5.0;
-        });
-
+        Trigger rumbleOnShift = new Trigger(() -> isHubActive());
+        rumbleOnShift
+                .whileTrue(new InstantCommand(() -> driverController.setRumble(RumbleType.kBothRumble, 1)))
+                .whileFalse(new InstantCommand(() -> driverController.setRumble(RumbleType.kBothRumble, 0)));
     }
 
     /*
@@ -250,4 +228,94 @@ public class RobotContainer {
                     OIConstants.kDriveDeadband),
             1, 0.02);
     }
+
+    /* Checks whether or not our hub is active */
+    public boolean isHubActive() {
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        // If we have no alliance, we cannot be enabled, therefore no hub.
+        if (alliance.isEmpty()) {
+            return false;
+        }
+        // Hub is always enabled in autonomous.
+        if (DriverStation.isAutonomousEnabled()) {
+            return true;
+        }
+        // At this point, if we're not teleop enabled, there is no hub.
+        if (!DriverStation.isTeleopEnabled()) {
+            return false;
+        }
+
+        // We're teleop enabled, compute.
+        double matchTime = DriverStation.getMatchTime();
+        String gameData = DriverStation.getGameSpecificMessage();
+        // If we have no game data, we cannot compute, assume hub is active, as its likely early in teleop.
+        if (gameData.isEmpty()) {
+            return true;
+        }
+        boolean redInactiveFirst = false;
+        switch (gameData.charAt(0)) {
+            case 'R' -> redInactiveFirst = true;
+            case 'B' -> redInactiveFirst = false;
+            default -> {
+                // If we have invalid game data, assume hub is active.
+                return true;
+            }
+        }
+
+        // Shift was is active for blue if red won auto, or red if blue won auto.
+        boolean shift1Active = switch (alliance.get()) {
+            case Red -> !redInactiveFirst;
+            case Blue -> redInactiveFirst;
+        };
+
+        if (matchTime > 130) {
+            // Transition shift, hub is active.
+            return true;
+        } else if (matchTime > 105) {
+            // Shift 1
+            return shift1Active;
+        } else if (matchTime > 80) {
+            // Shift 2
+            return !shift1Active;
+        } else if (matchTime > 55) {
+            // Shift 3
+            return shift1Active;
+        } else if (matchTime > 30) {
+            // Shift 4
+            return !shift1Active;
+        } else {
+            // End game, hub always active.
+            return true;
+        }
+    }
+
+    // public void setTeleopDefaultCommands() {
+    //     shooterSubsystem.setDefaultCommand(new RunCommand(() -> {
+    //         var alliance = DriverStation.getAlliance();
+    //         double currentX = driveSubsystem.getPose().getX();
+    //         double currentY = driveSubsystem.getPose().getY();
+    //         if (alliance.isPresent()) {
+    //             if (alliance.get() == DriverStation.Alliance.Blue) {
+    //                 if (currentX >= FieldConstants.kBlueShooterZoneMinX &&
+    //                     currentX <= FieldConstants.kBlueShooterZoneMaxX &&
+    //                     currentY >= FieldConstants.kShooterZoneMinY &&
+    //                     currentY <= FieldConstants.kShooterZoneMaxY) {
+    //                     shooterSubsystem.shoot();
+    //                 } else {
+    //                     shooterSubsystem.stopControl();
+    //                 }
+    //             } else if (alliance.get() == DriverStation.Alliance.Red) {
+    //                 if (currentX >= FieldConstants.kRedShooterZoneMinX &&
+    //                     currentX <= FieldConstants.kRedShooterZoneMaxX &&
+    //                     currentY >= FieldConstants.kShooterZoneMinY &&
+    //                     currentY <= FieldConstants.kShooterZoneMaxY) {
+    //                     shooterSubsystem.shoot();
+    //                 } else {
+    //                     shooterSubsystem.stopControl();
+    //                 }
+    //             }
+    //         }
+
+    //     }, shooterSubsystem));
+    // }
 }

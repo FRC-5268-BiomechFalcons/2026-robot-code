@@ -1,7 +1,7 @@
 package frc.robot.Commands;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
@@ -10,6 +10,8 @@ public class Intake extends Command {
     // Subsystems
     IntakeSubsystem intakeSubsystem;
     ShooterSubsystem shooterSubsystem;
+    private Timer agitatorTimer;
+    // private final double agitatesPerSecond = 3;
 
     // Intake speed
     double speed;
@@ -19,6 +21,7 @@ public class Intake extends Command {
         this.intakeSubsystem = intakeSubsystem;
         this.shooterSubsystem = shooterSubsystem;
         this.speed = speed;
+        this.agitatorTimer = new Timer();
     }
 
     /**
@@ -30,6 +33,15 @@ public class Intake extends Command {
         intakeSubsystem.intake(speed);
         shooterSubsystem.updateRPM(1500);
         shooterSubsystem.shoot();
+
+        agitatorTimer.reset();
+        agitatorTimer.start();
+    }
+
+    @Override
+    public void execute() {
+        // double power = Math.sin(2 * Math.PI * agitatesPerSecond * agitatorTimer.get());
+        // intakeSubsystem.agitate(power);
     }
 
     /**
@@ -41,6 +53,9 @@ public class Intake extends Command {
         shooterSubsystem.stopControl();
         // Resetting RPM back to default. 
         shooterSubsystem.updateRPM(3500);
+
+        agitatorTimer.stop();
+        agitatorTimer.reset();
     }
 
 }

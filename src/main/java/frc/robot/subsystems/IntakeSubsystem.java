@@ -20,7 +20,8 @@ public class IntakeSubsystem extends SubsystemBase {
     // Indexer Motor
     private final SparkMax indexerMotor = new SparkMax(8, MotorType.kBrushless);
 
-    private final PWMVictorSPX agitatorMotor = new PWMVictorSPX(0);
+    private final PWMVictorSPX agitatorMotorRight = new PWMVictorSPX(0);
+    private final PWMVictorSPX agitatorMotorLeft = new PWMVictorSPX(1);
 
     private boolean isIntaking;
 
@@ -43,9 +44,11 @@ public class IntakeSubsystem extends SubsystemBase {
         indexerMotor.set(speed);
 
         if (speed < 0) {
-            agitatorMotor.set(0.4);
+            agitatorMotorRight.set(0.4);
+            agitatorMotorLeft.set(-0.4);
         } else if (speed > 0) {
-            agitatorMotor.set(-0.4);
+            agitatorMotorRight.set(-0.4);
+            agitatorMotorLeft.set(0.4);
         }
 
         isIntaking = true;
@@ -60,15 +63,13 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotor.set(speed);
         indexerMotor.set(-speed);
 
-        agitatorMotor.set(0.67);
+        agitatorMotorRight.set(0.67);
+        agitatorMotorLeft.set(-0.67);
     }
 
     public void agitate(double power) {
-        agitatorMotor.set(power);
-    }
-
-    public void agitatorLeft() {
-        agitatorMotor.set(-0.6);
+        agitatorMotorRight.set(power);
+        agitatorMotorLeft.set(-power);
     }
 
     /**
@@ -78,7 +79,8 @@ public class IntakeSubsystem extends SubsystemBase {
         indexerMotor.set(0);
         intakeMotor.set(0);
 
-        agitatorMotor.set(0);
+        agitatorMotorLeft.set(0);
+        agitatorMotorRight.set(0);
 
         isIntaking = false;
     }
