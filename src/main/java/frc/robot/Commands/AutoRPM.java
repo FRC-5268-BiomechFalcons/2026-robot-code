@@ -105,6 +105,7 @@ public class AutoRPM extends Command {
             // // rotController.setSetpoint(desiredHeading.getDegrees() + offset);
             // intakeSubsystem.agitate(power);
             intakeSubsystem.agitate(.67);
+            driveSubsystem.setX();
         } else {
             intakeSubsystem.index(-indexSpeed / 2);
         }

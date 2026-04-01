@@ -134,11 +134,11 @@ public class AutoShoot extends Command {
         } else {
             intakeSubsystem.index(-indexSpeed / 2);
             rotController.setSetpoint(desiredHeading.getDegrees());
-        }
 
-        double rot = rotController.calculate(driveSubsystem.getHeading());
-        rot = MathUtil.clamp(rot, -1.0, 1.0);
-        driveSubsystem.drive(x, y, rot, true);
+            double rot = rotController.calculate(driveSubsystem.getHeading());
+            rot = MathUtil.clamp(rot, -1.0, 1.0);
+            driveSubsystem.drive(x, y, rot, true);
+        }
 
     }
 
