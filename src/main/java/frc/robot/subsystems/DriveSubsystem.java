@@ -60,6 +60,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     Pose2d limelightEstimatedPosition = new Pose2d();
 
+    private double gyroOffset = 0.0;
+
     // Odometry Variable
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
         DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(m_gyro.getYaw()),
@@ -101,7 +103,7 @@ public class DriveSubsystem extends SubsystemBase {
     public void periodic() {
 
         // Update the odometry in the periodic block
-        m_odometry.update(Rotation2d.fromDegrees(m_gyro.getYaw()),
+        m_odometry.update(Rotation2d.fromDegrees(getHeading()),
                 new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                         m_rearLeft.getPosition(), m_rearRight.getPosition() });
 
@@ -184,7 +186,7 @@ public class DriveSubsystem extends SubsystemBase {
 
             var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
                     0.50, // y meters
-                    1 // theta (ignore)
+                    99999999 // theta (ignore)
             );
 
             limelightEstimatedPosition = pose;
@@ -256,12 +258,10 @@ public class DriveSubsystem extends SubsystemBase {
      * @param pose The pose to which to set the odometry.
      */
     public void resetOdometry(Pose2d pose) {
-        m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getYaw()),
-                new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
-                        m_rearLeft.getPosition(), m_rearRight.getPosition() },
+        m_odometry.resetPosition(
+                Rotation2d.fromDegrees(getHeading()), new SwerveModulePosition[] { m_frontLeft.getPosition(),
+                        m_frontRight.getPosition(), m_rearLeft.getPosition(), m_rearRight.getPosition() },
                 pose);
-
-        resetQuest(pose);
     }
 
     /**
@@ -294,7 +294,7 @@ public class DriveSubsystem extends SubsystemBase {
         // PIGEON IMU
         var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                        Rotation2d.fromDegrees(m_gyro.getYaw()))
+                        Rotation2d.fromDegrees(getHeading()))
                 : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
                 DriveConstants.kMaxSpeedMetersPerSecond);
@@ -338,13 +338,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     /** Zeroes the heading of the robot. */
     public void zeroHeading() {
-        m_gyro.setYaw(0);
-        resetOdometry(getPose());
+        gyroOffset = -m_gyro.getYaw();
     }
 
-    public void setHeading(double angleDeg) {
-        m_gyro.setYaw(angleDeg);
-        resetOdometry(getPose());
+    public void setHeading(double desiredHeadingDeg) {
+        gyroOffset = desiredHeadingDeg - m_gyro.getYaw();
     }
 
     /**
@@ -353,8 +351,7 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the robot's heading in degrees, from -180 to 180
      */
     public double getHeading() {
-        // return Rotation2d.fromDegrees(m_gyro.getYaw()).getDegrees();
-        return m_odometry.getEstimatedPosition().getRotation().getDegrees();
+        return m_gyro.getYaw() + gyroOffset;
     }
 
     /**

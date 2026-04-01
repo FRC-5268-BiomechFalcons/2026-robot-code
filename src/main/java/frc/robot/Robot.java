@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -87,6 +90,19 @@ public class Robot extends TimedRobot {
 
         if (autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(autonomousCommand);
+
+            try {
+                PathPlannerPath path = PathPlannerAuto
+                        .getPathGroupFromAutoFile(autoChooser.getSelected().getName()).get(0);
+
+                Pose2d startPose = path.getStartingHolonomicPose().get();
+
+                robotContainer.driveSubsystem.resetOdometry(startPose);
+                robotContainer.driveSubsystem.resetQuest(startPose);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -122,17 +138,17 @@ public class Robot extends TimedRobot {
                         true),
                     robotContainer.driveSubsystem));
 
-        // robotContainer.driveSubsystem
-        //         .setHeading(robotContainer.driveSubsystem.getPose().getRotation().getDegrees());
-        // robotContainer.driveSubsystem.setHeading(robotContainer.driveSubsystem.getHeading());
-
         /*
-         * For testing purposes, this resets the robot's odometry to a known position on the field.
-         * IMPORTANT: Comment it out for competition.
+         * For testing purposes, this resets the quest to a known position on the field. IMPORTANT:
+         * Comment it out for competition.
          */
+        Pose2d testingPose = new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180));
+        robotContainer.driveSubsystem.resetQuest(testingPose);
 
+        // Resets heading so that field relative works properly.
         robotContainer.driveSubsystem
-                .resetOdometry(new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180)));
+                .setHeading(robotContainer.driveSubsystem.getPose().getRotation().getDegrees());
+
     }
 
     /** This function is called periodically during operator control. */
