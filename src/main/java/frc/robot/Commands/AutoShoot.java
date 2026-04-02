@@ -120,7 +120,7 @@ public class AutoShoot extends Command {
         double y = MathUtil.clamp(ySupplier.getAsDouble(), -1.0, 1.0);
 
         // Once we revamp the shooter (1.2 seconds) and once the robot faces the hub, index the fuel.
-        if ((shooter.hitRPMSetpoint() && rotController.atSetpoint() && timer.hasElapsed(1.2)) || hitRPM) {
+        if ((shooter.hitRPMSetpoint() && rotController.atSetpoint()) || hitRPM) {
             hitRPM = true;
             intakeSubsystem.index(indexSpeed);
             intakeSubsystem.agitate(.67);

@@ -13,7 +13,9 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -26,10 +28,14 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.QuestConstants;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
@@ -62,9 +68,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     private double gyroOffset = 0.0;
 
+    private PIDController rotController;
+
     // Odometry Variable
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
-        DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(m_gyro.getYaw()),
+        DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(getHeading()),
         new SwerveModulePosition[] { m_frontLeft.getPosition(), m_frontRight.getPosition(),
                 m_rearLeft.getPosition(), m_rearRight.getPosition() },
         new Pose2d());
@@ -97,6 +105,8 @@ public class DriveSubsystem extends SubsystemBase {
                 () -> SmartDashboard.putString("Quest Command Responses", "Tracking Acquired"));
         questNav.onTrackingLost(() -> SmartDashboard.putString("Quest Command Responses", "Tracking Lost!"));
 
+        rotController = new PIDController(0.008, 0.0, 0.0);
+        rotController.enableContinuousInput(-180, 180);
     }
 
     @Override
@@ -144,7 +154,7 @@ public class DriveSubsystem extends SubsystemBase {
                 // Add vision measurement to pose estimator
                 m_odometry.addVisionMeasurement(robotPose2d, // Measured pose
                         frame.dataTimestamp(), // When measurement was taken
-                        VecBuilder.fill(0.1, 0.1, 0.05) // Standard deviations
+                        VecBuilder.fill(0.05, 0.05, 0.035) // Standard deviations
 
                 );
             }
@@ -294,7 +304,7 @@ public class DriveSubsystem extends SubsystemBase {
         // PIGEON IMU
         var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                        Rotation2d.fromDegrees(getHeading()))
+                        Rotation2d.fromDegrees(getFieldRelativeHeading()))
                 : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
                 DriveConstants.kMaxSpeedMetersPerSecond);
@@ -338,11 +348,13 @@ public class DriveSubsystem extends SubsystemBase {
 
     /** Zeroes the heading of the robot. */
     public void zeroHeading() {
-        gyroOffset = -m_gyro.getYaw();
+        setHeading(0);
     }
 
     public void setHeading(double desiredHeadingDeg) {
-        gyroOffset = desiredHeadingDeg - m_gyro.getYaw();
+        Rotation2d desiredHeading = Rotation2d.fromDegrees(desiredHeadingDeg);
+        Rotation2d currentYaw = Rotation2d.fromDegrees(m_gyro.getYaw());
+        gyroOffset = desiredHeading.minus(currentYaw).getDegrees();
     }
 
     /**
@@ -351,7 +363,11 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the robot's heading in degrees, from -180 to 180
      */
     public double getHeading() {
-        return m_gyro.getYaw() + gyroOffset;
+        return Rotation2d.fromDegrees(gyroOffset).plus(Rotation2d.fromDegrees(m_gyro.getYaw())).getDegrees();
+    }
+
+    public double getFieldRelativeHeading() {
+        return m_odometry.getEstimatedPosition().getRotation().getDegrees();
     }
 
     /**
@@ -384,7 +400,7 @@ public class DriveSubsystem extends SubsystemBase {
     public Translation2d getFieldRelativeVelocity() {
         ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
         ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds,
-                Rotation2d.fromDegrees(getHeading()));
+                Rotation2d.fromDegrees(getFieldRelativeHeading()));
 
         return new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond,
             fieldRelativeSpeeds.vyMetersPerSecond);
@@ -416,5 +432,47 @@ public class DriveSubsystem extends SubsystemBase {
         } else {
             return FieldConstants.kHubTargetBlue;
         }
+    }
+
+    public void rotateToSetpoint(double x, double y, double goalAngle) {
+        rotController.setSetpoint(Math.toDegrees(goalAngle));
+
+        double rot = rotController.calculate(getFieldRelativeHeading());
+        double clampedRot = MathUtil.clamp(rot, -1, 1);
+
+        drive(x, y, clampedRot, true);
+    }
+
+    public Command headingControlledCommand(CommandXboxController driverController) {
+        return new RunCommand(() -> {
+            double angle = 0.0;
+            double x = driverController.getRightX();
+            double y = -driverController.getRightY();
+            double deadband = 0.15;
+            double magnitude = Math.sqrt(x * x + y * y);
+
+            if (magnitude > deadband) {
+                angle = Math.atan2(x, y);
+            }
+
+            SmartDashboard.putNumber("Desired", Math.toDegrees(angle));
+
+            rotateToSetpoint(
+                    -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
+                            OIConstants.kDriveDeadband),
+                    -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
+                            OIConstants.kDriveDeadband),
+                    -angle);
+        }, this);
+    }
+
+    public Command rotationControlledCommand(CommandXboxController driverController) {
+        return new RunCommand(() -> drive(
+                -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(Math.pow(driverController.getRightX(), 3),
+                        OIConstants.kDriveDeadband),
+                true),
+            this);
     }
 }
