@@ -7,17 +7,15 @@ package frc.robot;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathPlannerPath;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import frc.robot.Constants.OIConstants;
 
 
 /**
@@ -51,6 +49,9 @@ public class Robot extends TimedRobot {
         autoChooser.addOption("Right 2 Swipe", robotContainer.rightTwoSwipe());
 
         SmartDashboard.putData(autoChooser);
+        // robotContainer.driveSubsystem
+        //         .setHeading(robotContainer.driveSubsystem.getPose().getRotation().getDegrees());
+
     }
 
     /**
@@ -70,6 +71,7 @@ public class Robot extends TimedRobot {
          */
         CommandScheduler.getInstance().run();
         SmartDashboard.putBoolean("Is Hub Active?", robotContainer.isHubActive());
+        SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -125,29 +127,19 @@ public class Robot extends TimedRobot {
         // Changing the default RPM back to 3500 once teleop starts.
         robotContainer.shooterSubsystem.updateRPM(3500);
 
-        robotContainer.driveSubsystem.setDefaultCommand(
-                // The left stick controls translation of the robot.
-                // Turning is controlled by the X axis of the right stick.
-                new RunCommand(() -> robotContainer.driveSubsystem.drive(
-                        -MathUtil.applyDeadband(Math.pow(robotContainer.driverController.getLeftY(), 3),
-                                OIConstants.kDriveDeadband),
-                        -MathUtil.applyDeadband(Math.pow(robotContainer.driverController.getLeftX(), 3),
-                                OIConstants.kDriveDeadband),
-                        -MathUtil.applyDeadband(Math.pow(robotContainer.driverController.getRightX(), 3),
-                                OIConstants.kDriveDeadband),
-                        true),
-                    robotContainer.driveSubsystem));
-
         /*
          * For testing purposes, this resets the quest to a known position on the field. IMPORTANT:
          * Comment it out for competition.
          */
         Pose2d testingPose = new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180));
+
         robotContainer.driveSubsystem.resetQuest(testingPose);
+        robotContainer.driveSubsystem.resetOdometry(testingPose);
 
         // Resets heading so that field relative works properly.
-        robotContainer.driveSubsystem
-                .setHeading(robotContainer.driveSubsystem.getPose().getRotation().getDegrees());
+        robotContainer.driveSubsystem.setHeading(180);
+
+        // robotContainer.driveSubsystem.resetQuest(robotContainer.driveSubsystem.getPose());
 
     }
 

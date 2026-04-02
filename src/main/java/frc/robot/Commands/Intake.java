@@ -31,7 +31,7 @@ public class Intake extends Command {
     @Override
     public void initialize() {
         intakeSubsystem.intake(speed);
-        shooterSubsystem.updateRPM(1500);
+        shooterSubsystem.updateRPM(1700);
         shooterSubsystem.shoot();
 
         agitatorTimer.reset();
