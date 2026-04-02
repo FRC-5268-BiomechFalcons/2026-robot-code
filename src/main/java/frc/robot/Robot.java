@@ -32,6 +32,8 @@ public class Robot extends TimedRobot {
     // Autonomous Chooser
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
+    private String lastAutoName = "";
+
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -83,6 +85,23 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledPeriodic() {
+        Command selected = autoChooser.getSelected();
+
+        if (selected != null && !selected.getName().equals(lastAutoName)) {
+            lastAutoName = selected.getName();
+
+            try {
+                PathPlannerPath path = PathPlannerAuto.getPathGroupFromAutoFile(selected.getName()).get(0);
+
+                Pose2d startPose = path.getStartingHolonomicPose().get();
+
+                robotContainer.driveSubsystem.resetOdometry(startPose);
+                robotContainer.driveSubsystem.resetQuest(startPose);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
@@ -93,18 +112,18 @@ public class Robot extends TimedRobot {
         if (autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(autonomousCommand);
 
-            try {
-                PathPlannerPath path = PathPlannerAuto
-                        .getPathGroupFromAutoFile(autoChooser.getSelected().getName()).get(0);
+            // try {
+            //     PathPlannerPath path = PathPlannerAuto
+            //             .getPathGroupFromAutoFile(autoChooser.getSelected().getName()).get(0);
 
-                Pose2d startPose = path.getStartingHolonomicPose().get();
+            //     Pose2d startPose = path.getStartingHolonomicPose().get();
 
-                robotContainer.driveSubsystem.resetOdometry(startPose);
-                robotContainer.driveSubsystem.resetQuest(startPose);
+            //     robotContainer.driveSubsystem.resetOdometry(startPose);
+            //     robotContainer.driveSubsystem.resetQuest(startPose);
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            // } catch (Exception e) {
+            //     e.printStackTrace();
+            // }
         }
     }
 
@@ -123,24 +142,25 @@ public class Robot extends TimedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
-
-        // Changing the default RPM back to 3500 once teleop starts.
-        robotContainer.shooterSubsystem.updateRPM(3500);
+        /*
+         * COMPETITION TELEOPINIT RESET - Use this for comp.
+         */
+        // double estimatedRotDeg = robotContainer.driveSubsystem.getPose().getRotation().getDegrees();
+        // robotContainer.driveSubsystem.setHeading(estimatedRotDeg);
+        // robotContainer.driveSubsystem.setHeadingControlAngle(Math.toRadians(estimatedRotDeg));
 
         /*
          * For testing purposes, this resets the quest to a known position on the field. IMPORTANT:
-         * Comment it out for competition.
+         * Comment OUT lines 137-141 for COMPETITION.
          */
         Pose2d testingPose = new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180));
-
         robotContainer.driveSubsystem.resetQuest(testingPose);
         robotContainer.driveSubsystem.resetOdometry(testingPose);
-
-        // Resets heading so that field relative works properly.
         robotContainer.driveSubsystem.setHeading(180);
+        robotContainer.driveSubsystem.setHeadingControlAngle(Math.toRadians(180));
 
-        // robotContainer.driveSubsystem.resetQuest(robotContainer.driveSubsystem.getPose());
-
+        // Changing the default RPM back to 3500 once teleop starts.
+        robotContainer.shooterSubsystem.updateRPM(3500);
     }
 
     /** This function is called periodically during operator control. */

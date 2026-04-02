@@ -70,6 +70,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     private PIDController rotController;
 
+    private double headingControlAngle = 0.0;
+
     // Odometry Variable
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
         DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(getHeading()),
@@ -268,6 +270,8 @@ public class DriveSubsystem extends SubsystemBase {
      * @param pose The pose to which to set the odometry.
      */
     public void resetOdometry(Pose2d pose) {
+        setHeading(pose.getRotation().getDegrees());
+
         m_odometry.resetPosition(
                 Rotation2d.fromDegrees(getHeading()), new SwerveModulePosition[] { m_frontLeft.getPosition(),
                         m_frontRight.getPosition(), m_rearLeft.getPosition(), m_rearRight.getPosition() },
@@ -445,24 +449,23 @@ public class DriveSubsystem extends SubsystemBase {
 
     public Command headingControlledCommand(CommandXboxController driverController) {
         return new RunCommand(() -> {
-            double angle = 0.0;
             double x = driverController.getRightX();
             double y = -driverController.getRightY();
             double deadband = 0.15;
             double magnitude = Math.sqrt(x * x + y * y);
 
             if (magnitude > deadband) {
-                angle = Math.atan2(x, y);
+                headingControlAngle = Math.atan2(x, y);
             }
 
-            SmartDashboard.putNumber("Desired", Math.toDegrees(angle));
+            SmartDashboard.putNumber("Desired", Math.toDegrees(headingControlAngle));
 
             rotateToSetpoint(
                     -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
                             OIConstants.kDriveDeadband),
                     -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
                             OIConstants.kDriveDeadband),
-                    -angle);
+                    -headingControlAngle);
         }, this);
     }
 
@@ -474,5 +477,9 @@ public class DriveSubsystem extends SubsystemBase {
                         OIConstants.kDriveDeadband),
                 true),
             this);
+    }
+
+    public void setHeadingControlAngle(double angleRad) {
+        headingControlAngle = angleRad;
     }
 }

@@ -13,11 +13,9 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -66,40 +64,12 @@ public class RobotContainer {
         configureButtonBindings();
 
         // Configure default commands
-        // driveSubsystem.setDefaultCommand(
-        //         // The left stick controls translation of the robot.
-        //         // Turning is controlled by the X axis of the right stick.
-        //         new RunCommand(() -> driveSubsystem.drive(
-        //                 -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
-        //                         OIConstants.kDriveDeadband),
-        //                 -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
-        //                         OIConstants.kDriveDeadband),
-        //                 -MathUtil.applyDeadband(Math.pow(driverController.getRightX(), 3),
-        //                         OIConstants.kDriveDeadband),
-        //                 true),
-        //             driveSubsystem));
 
-        // Configure default commands
-        driveSubsystem.setDefaultCommand(new RunCommand(() -> {
-            double angle = 0.0;
-            double x = driverController.getRightX();
-            double y = -driverController.getRightY();
-            double deadband = 0.15;
-            double magnitude = Math.sqrt(x * x + y * y);
+        // HEADING CONTROLLED DRIVE
+        driveSubsystem.setDefaultCommand(driveSubsystem.headingControlledCommand(driverController));
 
-            if (magnitude > deadband) {
-                angle = Math.atan2(x, y);
-            }
-
-            SmartDashboard.putNumber("Desired", Math.toDegrees(angle));
-
-            driveSubsystem.rotateToSetpoint(
-                    -MathUtil.applyDeadband(Math.pow(driverController.getLeftY(), 3),
-                            OIConstants.kDriveDeadband),
-                    -MathUtil.applyDeadband(Math.pow(driverController.getLeftX(), 3),
-                            OIConstants.kDriveDeadband),
-                    -angle);
-        }, driveSubsystem));
+        // ROTATION CONTROLLED DRIVE
+        // driveSubsystem.setDefaultCommand(driveSubsystem.rotationControlledCommand(driverController));
 
         registerAutonomousCommands();
 
