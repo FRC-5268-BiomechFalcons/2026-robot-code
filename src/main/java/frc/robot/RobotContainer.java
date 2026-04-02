@@ -97,7 +97,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("Stop", new StopMotors(shooterSubsystem, intakeSubsystem));
 
         NamedCommands.registerCommand("Intake",
-                new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed));
+                new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed, null));
 
         NamedCommands.registerCommand("AutoShoot",
                 new AutoShoot(shooterSubsystem, intakeSubsystem, driveSubsystem, sotfCalculator,
@@ -125,10 +125,10 @@ public class RobotContainer {
         driverController.a().onTrue(new InstantCommand(() -> shooterSubsystem.updateRPM(3500)));
 
         // Intake controls
-        driverController.leftBumper()
-                .whileTrue(new Intake(intakeSubsystem, shooterSubsystem, -RobotConstants.kIntakeSpeed));
-        driverController.rightBumper()
-                .toggleOnTrue(new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed));
+        driverController.leftBumper().whileTrue(new Intake(intakeSubsystem, shooterSubsystem,
+            -RobotConstants.kIntakeSpeed, driverController));
+        driverController.rightBumper().toggleOnTrue(
+                new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed, driverController));
 
         driverController.start().onTrue(new InstantCommand(
             () -> driveSubsystem.resetOdometry(driveSubsystem.getLimelightEstimatedPose())));
