@@ -1,7 +1,9 @@
 package frc.robot.Commands;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
@@ -11,17 +13,20 @@ public class Intake extends Command {
     IntakeSubsystem intakeSubsystem;
     ShooterSubsystem shooterSubsystem;
     private Timer agitatorTimer;
+    private CommandXboxController controller;
     // private final double agitatesPerSecond = 3;
 
     // Intake speed
     double speed;
 
-    public Intake(IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, double speed) {
+    public Intake(IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, double speed,
+            CommandXboxController controller) {
         addRequirements(intakeSubsystem, shooterSubsystem);
         this.intakeSubsystem = intakeSubsystem;
         this.shooterSubsystem = shooterSubsystem;
         this.speed = speed;
         this.agitatorTimer = new Timer();
+        this.controller = controller;
     }
 
     /**
@@ -36,6 +41,9 @@ public class Intake extends Command {
 
         agitatorTimer.reset();
         agitatorTimer.start();
+        if (controller != null) {
+            controller.setRumble(RumbleType.kBothRumble, 0.5);
+        }
     }
 
     @Override
@@ -56,6 +64,9 @@ public class Intake extends Command {
 
         agitatorTimer.stop();
         agitatorTimer.reset();
+        if (controller != null) {
+            controller.setRumble(RumbleType.kBothRumble, 0);
+        }
     }
 
 }
