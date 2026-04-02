@@ -126,7 +126,7 @@ public class RobotContainer {
 
         // Intake controls
         driverController.leftBumper().whileTrue(new Intake(intakeSubsystem, shooterSubsystem,
-            -RobotConstants.kIntakeSpeed, driverController));
+            -RobotConstants.kIntakeSpeed, null));
         driverController.rightBumper().toggleOnTrue(
                 new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed, driverController));
 
@@ -152,8 +152,11 @@ public class RobotContainer {
         // Rumble notifier when shift changes occur. Move location in code later?
         Trigger rumbleOnShift = new Trigger(() -> isShiftChanging());
         rumbleOnShift
-                .onChange(new StartEndCommand(() -> driverController.setRumble(RumbleType.kBothRumble, 1),
-                    () -> driverController.setRumble(RumbleType.kBothRumble, 0)).withTimeout(0.1));
+                .onChange(new StartEndCommand(
+                    () -> driverController.setRumble(RumbleType.kBothRumble, 1),
+                    () -> driverController.setRumble(RumbleType.kBothRumble, 0))
+                    .withTimeout(0.3)
+                );
     }
 
     /*
