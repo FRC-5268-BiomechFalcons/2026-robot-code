@@ -451,7 +451,7 @@ public class DriveSubsystem extends SubsystemBase {
         return new RunCommand(() -> {
             double x = driverController.getRightX();
             double y = -driverController.getRightY();
-            double deadband = 0.15;
+            double deadband = 0.2;
             double magnitude = Math.sqrt(x * x + y * y);
 
             if (magnitude > deadband) {

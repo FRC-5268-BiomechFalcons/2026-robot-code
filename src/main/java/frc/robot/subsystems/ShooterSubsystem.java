@@ -7,9 +7,11 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,6 +26,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Shooter motor.
     private final TalonFX shooterMotor = new TalonFX(7);
+    private final TalonFX shooterMotorFollower = new TalonFX(17);
 
     // Default RPM
     private double rpm = 3000;
@@ -41,6 +44,7 @@ public class ShooterSubsystem extends SubsystemBase {
         slot0Configs.kD = RobotConstants.shooterkD;
 
         shooterMotor.getConfigurator().apply(slot0Configs);
+        shooterMotorFollower.getConfigurator().apply(slot0Configs);
     }
 
     @Override
@@ -83,6 +87,8 @@ public class ShooterSubsystem extends SubsystemBase {
         double goalInRPS = clampedGoal / 60;
         VelocityVoltage request = new VelocityVoltage(0).withSlot(0);
         shooterMotor.setControl(request.withVelocity(goalInRPS));
+        shooterMotorFollower
+                .setControl(new Follower(shooterMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     /**
@@ -90,6 +96,8 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public void stopControl() {
         shooterMotor.setControl(new NeutralOut());
+        shooterMotorFollower
+                .setControl(new Follower(shooterMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     /**
