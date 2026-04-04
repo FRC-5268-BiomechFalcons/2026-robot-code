@@ -74,14 +74,26 @@ public class RobotContainer {
         registerAutonomousCommands();
 
         // Configuring RPM Table
-        sotfCalculator.addTableEntry(1.78, 2700, 0, 1.04);
-        sotfCalculator.addTableEntry(2.03, 2850, 0, 0.66);
-        sotfCalculator.addTableEntry(2.32, 2950, 0, 0.83);
-        sotfCalculator.addTableEntry(2.68, 3000, 0, 0.88);
-        sotfCalculator.addTableEntry(3.08, 3250, 0, 0.81);
-        sotfCalculator.addTableEntry(3.34, 3400, 0, 1.01);
-        sotfCalculator.addTableEntry(3.85, 3800, 0, 1.04);
-        sotfCalculator.addTableEntry(4.05, 3850, 0, 1.05);
+        // sotfCalculator.addTableEntry(1.78, 2700, 0, 1.04);
+        // sotfCalculator.addTableEntry(2.03, 2850, 0, 0.66);
+        // sotfCalculator.addTableEntry(2.32, 2950, 0, 0.83);
+        // sotfCalculator.addTableEntry(2.68, 3000, 0, 0.88);
+        // sotfCalculator.addTableEntry(3.08, 3250, 0, 0.81);
+        // sotfCalculator.addTableEntry(3.34, 3400, 0, 1.01);
+        // sotfCalculator.addTableEntry(3.85, 3800, 0, 1.04);
+        // sotfCalculator.addTableEntry(4.05, 3850, 0, 1.05);
+
+        sotfCalculator.addTableEntry(1.75, 2550, 0, 0.7);
+        sotfCalculator.addTableEntry(2, 2650, 0, 1);
+        sotfCalculator.addTableEntry(2.3, 2700, 0, 1);
+        sotfCalculator.addTableEntry(2.6, 2750, 0, .99);
+        sotfCalculator.addTableEntry(2.9, 2800, 0, 1.03);
+        sotfCalculator.addTableEntry(3.1, 2950, 0, 1.01);
+        sotfCalculator.addTableEntry(3.35, 3175, 0, 1);
+        sotfCalculator.addTableEntry(3.7, 3325, 0, 1);
+        sotfCalculator.addTableEntry(4, 3485, 0, 1.2);
+        sotfCalculator.addTableEntry(4.35, 3650, 0, 1.5);
+        sotfCalculator.addTableEntry(4.7, 3800, 0, 1.5);
     }
 
     /**
@@ -125,8 +137,8 @@ public class RobotContainer {
         driverController.a().onTrue(new InstantCommand(() -> shooterSubsystem.updateRPM(3500)));
 
         // Intake controls
-        driverController.leftBumper().whileTrue(new Intake(intakeSubsystem, shooterSubsystem,
-            -RobotConstants.kIntakeSpeed, null));
+        driverController.leftBumper()
+                .whileTrue(new Intake(intakeSubsystem, shooterSubsystem, -RobotConstants.kIntakeSpeed, null));
         driverController.rightBumper().toggleOnTrue(
                 new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed, driverController));
 
@@ -152,11 +164,8 @@ public class RobotContainer {
         // Rumble notifier when shift changes occur. Move location in code later?
         Trigger rumbleOnShift = new Trigger(() -> isShiftChanging());
         rumbleOnShift
-                .onChange(new StartEndCommand(
-                    () -> driverController.setRumble(RumbleType.kBothRumble, 1),
-                    () -> driverController.setRumble(RumbleType.kBothRumble, 0))
-                    .withTimeout(0.3)
-                );
+                .onChange(new StartEndCommand(() -> driverController.setRumble(RumbleType.kBothRumble, 1),
+                    () -> driverController.setRumble(RumbleType.kBothRumble, 0)).withTimeout(0.3));
     }
 
     /*

@@ -51,9 +51,9 @@ public class UpdateRPM extends InstantCommand {
         if (rpm != 0) {
             shooterSubsystem.updateRPM(rpm);
         } else if (isIncreasing) {
-            shooterSubsystem.updateRPM(shooterSubsystem.getUpdatingRPM() + 100);
+            shooterSubsystem.updateRPM(shooterSubsystem.getUpdatingRPM() + 50);
         } else if (!isIncreasing) {
-            shooterSubsystem.updateRPM(shooterSubsystem.getUpdatingRPM() - 100);
+            shooterSubsystem.updateRPM(shooterSubsystem.getUpdatingRPM() - 50);
         }
     }
 }

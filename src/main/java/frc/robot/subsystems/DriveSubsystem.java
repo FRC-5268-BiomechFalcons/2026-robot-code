@@ -70,7 +70,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     private PIDController rotController;
 
-    private double headingControlAngle = 0.0;
+    private double headingControlAngle = 0;
 
     // Odometry Variable
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
@@ -107,7 +107,7 @@ public class DriveSubsystem extends SubsystemBase {
                 () -> SmartDashboard.putString("Quest Command Responses", "Tracking Acquired"));
         questNav.onTrackingLost(() -> SmartDashboard.putString("Quest Command Responses", "Tracking Lost!"));
 
-        rotController = new PIDController(0.008, 0.0, 0.0);
+        rotController = new PIDController(0.02, 0.0, 0.0);
         rotController.enableContinuousInput(-180, 180);
     }
 
@@ -156,7 +156,7 @@ public class DriveSubsystem extends SubsystemBase {
                 // Add vision measurement to pose estimator
                 m_odometry.addVisionMeasurement(robotPose2d, // Measured pose
                         frame.dataTimestamp(), // When measurement was taken
-                        VecBuilder.fill(0.05, 0.05, 0.035) // Standard deviations
+                        VecBuilder.fill(0.08, 0.08, 0.035) // Standard deviations
 
                 );
             }
@@ -198,7 +198,7 @@ public class DriveSubsystem extends SubsystemBase {
 
             var limelightStdDevs = edu.wpi.first.math.VecBuilder.fill(0.50, // x meters
                     0.50, // y meters
-                    99999999 // theta (ignore)
+                    1 // theta (ignore)
             );
 
             limelightEstimatedPosition = pose;
@@ -308,7 +308,7 @@ public class DriveSubsystem extends SubsystemBase {
         // PIGEON IMU
         var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                        Rotation2d.fromDegrees(getFieldRelativeHeading()))
+                        Rotation2d.fromDegrees(getHeading()))
                 : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
                 DriveConstants.kMaxSpeedMetersPerSecond);
@@ -358,7 +358,12 @@ public class DriveSubsystem extends SubsystemBase {
     public void setHeading(double desiredHeadingDeg) {
         Rotation2d desiredHeading = Rotation2d.fromDegrees(desiredHeadingDeg);
         Rotation2d currentYaw = Rotation2d.fromDegrees(m_gyro.getYaw());
-        gyroOffset = desiredHeading.minus(currentYaw).getDegrees();
+        if (shouldFlipPath()) {
+            gyroOffset = desiredHeading.minus(currentYaw).plus(Rotation2d.fromDegrees(180)).getDegrees();
+
+        } else {
+            gyroOffset = desiredHeading.minus(currentYaw).getDegrees();
+        }
     }
 
     /**
@@ -441,7 +446,7 @@ public class DriveSubsystem extends SubsystemBase {
     public void rotateToSetpoint(double x, double y, double goalAngle) {
         rotController.setSetpoint(Math.toDegrees(goalAngle));
 
-        double rot = rotController.calculate(getFieldRelativeHeading());
+        double rot = rotController.calculate(getHeading());
         double clampedRot = MathUtil.clamp(rot, -1, 1);
 
         drive(x, y, clampedRot, true);
@@ -451,7 +456,7 @@ public class DriveSubsystem extends SubsystemBase {
         return new RunCommand(() -> {
             double x = driverController.getRightX();
             double y = -driverController.getRightY();
-            double deadband = 0.2;
+            double deadband = 0.35;
             double magnitude = Math.sqrt(x * x + y * y);
 
             if (magnitude > deadband) {

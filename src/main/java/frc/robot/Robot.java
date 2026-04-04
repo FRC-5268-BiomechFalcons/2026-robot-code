@@ -91,7 +91,13 @@ public class Robot extends TimedRobot {
             lastAutoName = selected.getName();
 
             try {
-                PathPlannerPath path = PathPlannerAuto.getPathGroupFromAutoFile(selected.getName()).get(0);
+                PathPlannerPath path;
+                if (robotContainer.driveSubsystem.shouldFlipPath()) {
+                    path = PathPlannerAuto.getPathGroupFromAutoFile(selected.getName()).get(0).flipPath();
+
+                } else {
+                    path = PathPlannerAuto.getPathGroupFromAutoFile(selected.getName()).get(0);
+                }
 
                 Pose2d startPose = path.getStartingHolonomicPose().get();
 
@@ -145,22 +151,30 @@ public class Robot extends TimedRobot {
         /*
          * COMPETITION TELEOPINIT RESET - Use this for comp.
          */
-        // double estimatedRotDeg = robotContainer.driveSubsystem.getPose().getRotation().getDegrees();
-        // robotContainer.driveSubsystem.setHeading(estimatedRotDeg);
+        double estimatedRotDeg = robotContainer.driveSubsystem.getPose().getRotation().getDegrees();
+        robotContainer.driveSubsystem.setHeading(estimatedRotDeg);
+
+        robotContainer.driveSubsystem.setHeadingControlAngle(Math.toRadians(estimatedRotDeg));
+        //     robotContainer.driveSubsystem
+        //             .setHeadingControlAngle(Rotation2d.fromRadians(Math.toRadians(estimatedRotDeg))
+        //                     .minus(Rotation2d.fromRadians(Math.PI)).getRadians());
+        // } else {
+        // robotContainer.driveSubsystem.setHeading(Rotation2d.fromDegrees(estimatedRotDeg).getDegrees());
         // robotContainer.driveSubsystem.setHeadingControlAngle(Math.toRadians(estimatedRotDeg));
 
         /*
          * For testing purposes, this resets the quest to a known position on the field. IMPORTANT:
          * Comment OUT lines 137-141 for COMPETITION.
          */
-        Pose2d testingPose = new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180));
-        robotContainer.driveSubsystem.resetQuest(testingPose);
-        robotContainer.driveSubsystem.resetOdometry(testingPose);
-        robotContainer.driveSubsystem.setHeading(180);
-        robotContainer.driveSubsystem.setHeadingControlAngle(Math.toRadians(180));
+        // Pose2d testingPose = new Pose2d(new Translation2d(3.5, 4), Rotation2d.fromDegrees(180));
+        // robotContainer.driveSubsystem.resetQuest(testingPose);
+        // robotContainer.driveSubsystem.resetOdometry(testingPose);
+        // robotContainer.driveSubsystem.setHeading(180);
+        // robotContainer.driveSubsystem.setHeadingControlAngle(Math.toRadians(180));
 
         // Changing the default RPM back to 3500 once teleop starts.
         robotContainer.shooterSubsystem.updateRPM(3500);
+
     }
 
     /** This function is called periodically during operator control. */
