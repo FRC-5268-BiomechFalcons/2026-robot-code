@@ -135,7 +135,7 @@ public class AutoShoot extends Command {
             intakeSubsystem.index(-indexSpeed / 2);
             rotController.setSetpoint(desiredHeading.getDegrees());
 
-            double rot = rotController.calculate(driveSubsystem.getHeading());
+            double rot = rotController.calculate(driveSubsystem.getFieldRelativeHeading());
             rot = MathUtil.clamp(rot, -1.0, 1.0);
             driveSubsystem.drive(x, y, rot, true);
         }
