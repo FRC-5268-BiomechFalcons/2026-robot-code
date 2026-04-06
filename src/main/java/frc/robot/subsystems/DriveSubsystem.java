@@ -308,7 +308,7 @@ public class DriveSubsystem extends SubsystemBase {
         // PIGEON IMU
         var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                        Rotation2d.fromDegrees(getHeading()))
+                        Rotation2d.fromDegrees(getFieldRelativeHeading()))
                 : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
                 DriveConstants.kMaxSpeedMetersPerSecond);
@@ -358,25 +358,30 @@ public class DriveSubsystem extends SubsystemBase {
     public void setHeading(double desiredHeadingDeg) {
         Rotation2d desiredHeading = Rotation2d.fromDegrees(desiredHeadingDeg);
         Rotation2d currentYaw = Rotation2d.fromDegrees(m_gyro.getYaw());
-        if (shouldFlipPath()) {
-            gyroOffset = desiredHeading.minus(currentYaw).plus(Rotation2d.fromDegrees(180)).getDegrees();
-
-        } else {
-            gyroOffset = desiredHeading.minus(currentYaw).getDegrees();
-        }
+        gyroOffset = desiredHeading.minus(currentYaw).getDegrees();
     }
 
     /**
      * Returns the heading of the robot.
      *
-     * @return the robot's heading in degrees, from -180 to 180
+     * @return the robot's heading in degrees, from -180 to 180. This heading is blue side absolute.
      */
     public double getHeading() {
         return Rotation2d.fromDegrees(gyroOffset).plus(Rotation2d.fromDegrees(m_gyro.getYaw())).getDegrees();
     }
 
+    /**
+     * Returns the alliance relative heading of the robot. 
+     * If we are on blue, 0 will be straight out of the blue alliance wall, and vice versa for red.
+     * 
+     * @return the robot's heading in degrees, from -180 to 180. This heading is alliance relative.
+     */
     public double getFieldRelativeHeading() {
-        return m_odometry.getEstimatedPosition().getRotation().getDegrees();
+        if (shouldFlipPath()) {
+            return Rotation2d.fromDegrees(getHeading()).plus(Rotation2d.fromDegrees(180)).getDegrees();
+        } else {
+            return Rotation2d.fromDegrees(getHeading()).getDegrees();
+        }
     }
 
     /**
@@ -416,6 +421,20 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     /**
+     * Fetches the robot's blue side absolute velocity by convering it from robot relative velocity. This is used for the shooter calculations, which are based on blue side absolute coordinates.
+     * 
+     * @return a Translation2d of the robot's x and y blue side absolute speeds
+     */
+    public Translation2d getBlueSideAbsoluteVelocity() {
+        ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
+        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds,
+                Rotation2d.fromDegrees(getHeading()));
+
+        return new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond,
+            fieldRelativeSpeeds.vyMetersPerSecond);
+    }
+
+    /**
      * This is exclusive for the 2026 FRC Game - Rebuilt.
      * Fetches the distance to the hub using the robot's pose and the hub pose.
      * 
@@ -446,7 +465,7 @@ public class DriveSubsystem extends SubsystemBase {
     public void rotateToSetpoint(double x, double y, double goalAngle) {
         rotController.setSetpoint(Math.toDegrees(goalAngle));
 
-        double rot = rotController.calculate(getHeading());
+        double rot = rotController.calculate(getFieldRelativeHeading());
         double clampedRot = MathUtil.clamp(rot, -1, 1);
 
         drive(x, y, clampedRot, true);

@@ -80,7 +80,7 @@ public class AutoRPM extends Command {
     public void execute() {
         // Current robot pose and velocity
         Translation2d robotPos = driveSubsystem.getPose().getTranslation();
-        Translation2d robotVelField = driveSubsystem.getFieldRelativeVelocity();
+        Translation2d robotVelField = driveSubsystem.getBlueSideAbsoluteVelocity();
 
         // Position of the hub
         Translation2d hubPos = driveSubsystem.getHubPose().getTranslation().toTranslation2d();

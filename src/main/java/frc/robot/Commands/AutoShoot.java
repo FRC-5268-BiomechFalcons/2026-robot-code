@@ -94,7 +94,7 @@ public class AutoShoot extends Command {
     public void execute() {
         // Current robot pose and velocity
         Translation2d robotPos = driveSubsystem.getPose().getTranslation();
-        Translation2d robotVelField = driveSubsystem.getFieldRelativeVelocity();
+        Translation2d robotVelField = driveSubsystem.getBlueSideAbsoluteVelocity();
 
         // Position of the hub
         Translation2d hubPos = driveSubsystem.getHubPose().getTranslation().toTranslation2d();
@@ -135,7 +135,7 @@ public class AutoShoot extends Command {
             intakeSubsystem.index(-indexSpeed / 2);
             rotController.setSetpoint(desiredHeading.getDegrees());
 
-            double rot = rotController.calculate(driveSubsystem.getFieldRelativeHeading());
+            double rot = rotController.calculate(driveSubsystem.getHeading());
             rot = MathUtil.clamp(rot, -1.0, 1.0);
             driveSubsystem.drive(x, y, rot, true);
         }
