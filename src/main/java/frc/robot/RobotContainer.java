@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
@@ -139,8 +140,9 @@ public class RobotContainer {
         // Intake controls
         driverController.leftBumper()
                 .whileTrue(new Intake(intakeSubsystem, shooterSubsystem, -RobotConstants.kIntakeSpeed, null));
-        driverController.rightBumper().toggleOnTrue(
-                new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed, driverController));
+        Intake intakeCommand = new Intake(intakeSubsystem, shooterSubsystem, RobotConstants.kIntakeSpeed,
+            driverController);
+        driverController.rightBumper().toggleOnTrue(intakeCommand);
 
         driverController.start().onTrue(new InstantCommand(
             () -> driveSubsystem.resetOdometry(driveSubsystem.getLimelightEstimatedPose())));
@@ -163,9 +165,20 @@ public class RobotContainer {
 
         // Rumble notifier when shift changes occur. Move location in code later?
         Trigger rumbleOnShift = new Trigger(() -> isShiftChanging());
-        rumbleOnShift
-                .onChange(new StartEndCommand(() -> driverController.setRumble(RumbleType.kBothRumble, 1),
-                    () -> driverController.setRumble(RumbleType.kBothRumble, 0)).withTimeout(0.3));
+        boolean isIntaking = CommandScheduler.getInstance().isScheduled(intakeCommand);
+        rumbleOnShift.onChange(
+            new StartEndCommand(
+                () -> driverController.setRumble(RumbleType.kBothRumble, 1), 
+                () -> {
+                    if (isIntaking) {
+                        driverController.setRumble(RumbleType.kBothRumble, 0.5);
+                    }
+                    else {
+                        driverController.setRumble(RumbleType.kBothRumble, 0);
+                    }
+                }
+            ).withTimeout(0.3)
+        );
     }
 
     /*
