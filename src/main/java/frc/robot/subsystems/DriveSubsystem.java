@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
+import com.ctre.phoenix.sensors.PigeonIMU.PigeonState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -72,6 +73,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     private double headingControlAngle = 0;
 
+    private int gyroDebounceCounter = 0;
+
     // Odometry Variable
     private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
         DriveConstants.kDriveKinematics, Rotation2d.fromDegrees(getHeading()),
@@ -108,6 +111,7 @@ public class DriveSubsystem extends SubsystemBase {
         questNav.onTrackingLost(() -> SmartDashboard.putString("Quest Command Responses", "Tracking Lost!"));
 
         rotController = new PIDController(0.02, 0.0, 0.0);
+        rotController.setTolerance(3.5);
         rotController.enableContinuousInput(-180, 180);
     }
 
@@ -132,6 +136,14 @@ public class DriveSubsystem extends SubsystemBase {
         SmartDashboard.putData(field);
         SmartDashboard.putNumber("Distance to Hub", getDistanceToHub());
         SmartDashboard.putNumber("Heading", getHeading());
+        SmartDashboard.putBoolean("Pigeon Comms", !(m_gyro.getState() == PigeonState.NoComm));
+
+        boolean isGyroPresent = !(m_gyro.getState() == PigeonState.NoComm);
+        if (!isGyroPresent) {
+            gyroDebounceCounter += 1;
+        } else {
+            gyroDebounceCounter = 0;
+        }
     }
 
     /**
@@ -367,7 +379,13 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the robot's heading in degrees, from -180 to 180. This heading is blue side absolute.
      */
     public double getHeading() {
-        return Rotation2d.fromDegrees(gyroOffset).plus(Rotation2d.fromDegrees(m_gyro.getYaw())).getDegrees();
+
+        if (gyroDebounceCounter >= 3) {
+            return m_odometry.getEstimatedPosition().getRotation().getDegrees();
+        } else {
+            return Rotation2d.fromDegrees(gyroOffset).plus(Rotation2d.fromDegrees(m_gyro.getYaw()))
+                    .getDegrees();
+        }
     }
 
     /**
@@ -377,10 +395,21 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the robot's heading in degrees, from -180 to 180. This heading is alliance relative.
      */
     public double getFieldRelativeHeading() {
-        if (shouldFlipPath()) {
-            return Rotation2d.fromDegrees(getHeading()).plus(Rotation2d.fromDegrees(180)).getDegrees();
+
+        if (gyroDebounceCounter >= 3) {
+            if (shouldFlipPath()) {
+                return m_odometry.getEstimatedPosition().getRotation().plus(Rotation2d.fromDegrees(180))
+                        .getDegrees();
+
+            } else {
+                return m_odometry.getEstimatedPosition().getRotation().getDegrees();
+            }
         } else {
-            return Rotation2d.fromDegrees(getHeading()).getDegrees();
+            if (shouldFlipPath()) {
+                return Rotation2d.fromDegrees(getHeading()).plus(Rotation2d.fromDegrees(180)).getDegrees();
+            } else {
+                return Rotation2d.fromDegrees(getHeading()).getDegrees();
+            }
         }
     }
 

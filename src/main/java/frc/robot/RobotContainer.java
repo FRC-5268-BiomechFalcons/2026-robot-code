@@ -67,10 +67,10 @@ public class RobotContainer {
         // Configure default commands
 
         // HEADING CONTROLLED DRIVE
-        driveSubsystem.setDefaultCommand(driveSubsystem.headingControlledCommand(driverController));
+        // driveSubsystem.setDefaultCommand(driveSubsystem.headingControlledCommand(driverController));
 
         // ROTATION CONTROLLED DRIVE
-        // driveSubsystem.setDefaultCommand(driveSubsystem.rotationControlledCommand(driverController));
+        driveSubsystem.setDefaultCommand(driveSubsystem.rotationControlledCommand(driverController));
 
         registerAutonomousCommands();
 
@@ -232,6 +232,15 @@ public class RobotContainer {
     public Command rightTwoSwipe() {
         try {
             return new PathPlannerAuto("RIGHT 2 Swipe");
+        } catch (Exception e) {
+            System.out.println("Error " + e);
+            return Commands.none();
+        }
+    }
+
+    public Command centerDepot() {
+        try {
+            return new PathPlannerAuto("Center Depot");
         } catch (Exception e) {
             System.out.println("Error " + e);
             return Commands.none();
