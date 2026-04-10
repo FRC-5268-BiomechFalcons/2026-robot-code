@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -32,6 +33,7 @@ public class MAXSwerveModule {
     private final SparkMax m_turningSpark;
     private final AbsoluteEncoder m_turningEncoder;
     private final SparkClosedLoopController m_turningClosedLoopController;
+    private final CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     private double m_chassisAngularOffset = 0;
     private SwerveModuleState m_desiredState = new SwerveModuleState(0.0, new Rotation2d());
@@ -56,6 +58,10 @@ public class MAXSwerveModule {
 
         // Configuring the NEO turn motors.
         m_turningClosedLoopController = m_turningSpark.getClosedLoopController();
+
+        currentLimits.SupplyCurrentLimit = 65;
+        currentLimits.SupplyCurrentLimitEnable = true;
+        m_drivingTalon.getConfigurator().apply(currentLimits);
 
         // Apply the respective configurations to the SPARKS. Reset parameters before
         // applying the configuration to bring the SPARK to a known good state. Persist

@@ -67,10 +67,10 @@ public class RobotContainer {
         // Configure default commands
 
         // HEADING CONTROLLED DRIVE
-        // driveSubsystem.setDefaultCommand(driveSubsystem.headingControlledCommand(driverController));
+        driveSubsystem.setDefaultCommand(driveSubsystem.rotationControlledCommand(driverController));
 
         // ROTATION CONTROLLED DRIVE
-        driveSubsystem.setDefaultCommand(driveSubsystem.rotationControlledCommand(driverController));
+        // driveSubsystem.setDefaultCommand(driveSubsystem.headingControlledCommand(driverController));
 
         registerAutonomousCommands();
 
@@ -88,8 +88,7 @@ public class RobotContainer {
         sotfCalculator.addTableEntry(2, 2650, 0, 1);
         sotfCalculator.addTableEntry(2.3, 2700, 0, 1);
         sotfCalculator.addTableEntry(2.6, 2750, 0, .99);
-        sotfCalculator.addTableEntry(2.9, 2800, 0, 1.03);
-        sotfCalculator.addTableEntry(3.1, 2950, 0, 1.01);
+        sotfCalculator.addTableEntry(2.9, 3050, 0, 1.03);
         sotfCalculator.addTableEntry(3.35, 3175, 0, 1);
         sotfCalculator.addTableEntry(3.7, 3325, 0, 1);
         sotfCalculator.addTableEntry(4, 3485, 0, 1.2);
@@ -144,8 +143,11 @@ public class RobotContainer {
             driverController);
         driverController.rightBumper().toggleOnTrue(intakeCommand);
 
-        driverController.start().onTrue(new InstantCommand(
-            () -> driveSubsystem.resetOdometry(driveSubsystem.getLimelightEstimatedPose())));
+        // driverController.start().onTrue(new InstantCommand(() -> driveSubsystem
+        //         .setDefaultCommand(driveSubsystem.headingControlledCommand(driverController))));
+
+        // driverController.back().onTrue(new InstantCommand(() -> driveSubsystem
+        //         .setDefaultCommand(driveSubsystem.rotationControlledCommand(driverController))));
 
         // Manual RPM Increments - DPAD UP increases RPM Setpoint by 100, DPAD Down decreases RPM Setpoint by 100
         driverController.pov(0).onTrue(new UpdateRPM(shooterSubsystem, true));
