@@ -165,20 +165,15 @@ public class RobotContainer {
 
         // Rumble notifier when shift changes occur. Move location in code later?
         Trigger rumbleOnShift = new Trigger(() -> isShiftChanging());
-        boolean isIntaking = CommandScheduler.getInstance().isScheduled(intakeCommand);
         rumbleOnShift.onChange(
-            new StartEndCommand(
-                () -> driverController.setRumble(RumbleType.kBothRumble, 1), 
-                () -> {
+                new StartEndCommand(() -> driverController.setRumble(RumbleType.kBothRumble, 1), () -> {
+                    boolean isIntaking = CommandScheduler.getInstance().isScheduled(intakeCommand);
                     if (isIntaking) {
                         driverController.setRumble(RumbleType.kBothRumble, 0.5);
-                    }
-                    else {
+                    } else {
                         driverController.setRumble(RumbleType.kBothRumble, 0);
                     }
-                }
-            ).withTimeout(0.3)
-        );
+                }).withTimeout(0.3));
     }
 
     /*
