@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.ctre.phoenix.sensors.PigeonIMU.PigeonState;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -136,9 +137,9 @@ public class DriveSubsystem extends SubsystemBase {
         SmartDashboard.putData(field);
         SmartDashboard.putNumber("Distance to Hub", getDistanceToHub());
         SmartDashboard.putNumber("Heading", getHeading());
-        SmartDashboard.putBoolean("Pigeon Comms", !(m_gyro.getState() == PigeonState.NoComm));
+        SmartDashboard.putBoolean("Pigeon Comms", m_gyro.getLastError() == ErrorCode.OK);
 
-        boolean isGyroPresent = !(m_gyro.getState() == PigeonState.NoComm);
+        boolean isGyroPresent = m_gyro.getLastError() == ErrorCode.OK;
         if (!isGyroPresent) {
             gyroDebounceCounter += 1;
         } else {
