@@ -75,14 +75,6 @@ public class RobotContainer {
         registerAutonomousCommands();
 
         // Configuring RPM Table
-        // sotfCalculator.addTableEntry(1.78, 2700, 0, 1.04);
-        // sotfCalculator.addTableEntry(2.03, 2850, 0, 0.66);
-        // sotfCalculator.addTableEntry(2.32, 2950, 0, 0.83);
-        // sotfCalculator.addTableEntry(2.68, 3000, 0, 0.88);
-        // sotfCalculator.addTableEntry(3.08, 3250, 0, 0.81);
-        // sotfCalculator.addTableEntry(3.34, 3400, 0, 1.01);
-        // sotfCalculator.addTableEntry(3.85, 3800, 0, 1.04);
-        // sotfCalculator.addTableEntry(4.05, 3850, 0, 1.05);
 
         sotfCalculator.addTableEntry(1.75, 2550, 0, 0.7);
         sotfCalculator.addTableEntry(2, 2650, 0, 1);
@@ -91,9 +83,9 @@ public class RobotContainer {
         sotfCalculator.addTableEntry(2.9, 3050, 0, 1.03);
         sotfCalculator.addTableEntry(3.35, 3175, 0, 1);
         sotfCalculator.addTableEntry(3.7, 3325, 0, 1);
-        sotfCalculator.addTableEntry(4, 3485, 0, 1.2);
-        sotfCalculator.addTableEntry(4.35, 3650, 0, 1.5);
-        sotfCalculator.addTableEntry(4.7, 3800, 0, 1.5);
+        sotfCalculator.addTableEntry(4, 3500, 0, 1.2);
+        sotfCalculator.addTableEntry(4.35, 3700, 0, 1.5);
+        sotfCalculator.addTableEntry(4.7, 3900, 0, 1.5);
     }
 
     /**
@@ -149,6 +141,9 @@ public class RobotContainer {
         // driverController.back().onTrue(new InstantCommand(() -> driveSubsystem
         //         .setDefaultCommand(driveSubsystem.rotationControlledCommand(driverController))));
 
+        driverController.start().onTrue(new InstantCommand(
+            () -> driveSubsystem.setHeading(driveSubsystem.getPose().getRotation().getDegrees())));
+
         // Manual RPM Increments - DPAD UP increases RPM Setpoint by 100, DPAD Down decreases RPM Setpoint by 100
         driverController.pov(0).onTrue(new UpdateRPM(shooterSubsystem, true));
         driverController.pov(180).onTrue(new UpdateRPM(shooterSubsystem, false));
@@ -175,7 +170,7 @@ public class RobotContainer {
                     } else {
                         driverController.setRumble(RumbleType.kBothRumble, 0);
                     }
-                }).withTimeout(0.3));
+                }).withTimeout(0.5));
     }
 
     /*
@@ -193,15 +188,6 @@ public class RobotContainer {
     public Command leftOneSwipeAndClimb() {
         try {
             return new PathPlannerAuto("LEFT 1 Swipe + Climb");
-        } catch (Exception e) {
-            System.out.println("Error " + e);
-            return Commands.none();
-        }
-    }
-
-    public Command leftTwoSwipeAndClimb() {
-        try {
-            return new PathPlannerAuto("LEFT 2 Swipe Then Climb");
         } catch (Exception e) {
             System.out.println("Error " + e);
             return Commands.none();
