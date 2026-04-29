@@ -143,8 +143,12 @@ public class DriveSubsystem extends SubsystemBase {
         if (!isGyroPresent) {
             gyroDebounceCounter += 1;
         } else {
+            if (gyroDebounceCounter >= 3) {
+                setHeading(getPose().getRotation().getDegrees());
+            }
             gyroDebounceCounter = 0;
         }
+
     }
 
     /**

@@ -47,7 +47,7 @@ public class Robot extends TimedRobot {
         autoChooser.addOption("Shoot Preload Then Climb", robotContainer.shootThenClimbAuto());
         autoChooser.addOption("Shoot Preload", robotContainer.shootPreloadAuto());
         autoChooser.addOption("Left 1 Swipe + Climb", robotContainer.leftOneSwipeAndClimb());
-        autoChooser.addOption("Left 2 Swipe + Climb", robotContainer.leftTwoSwipeAndClimb());
+        // autoChooser.addOption("Left 2 Swipe + Climb", robotContainer.leftTwoSwipeAndClimb());
         autoChooser.addOption("Right 2 Swipe", robotContainer.rightTwoSwipe());
         autoChooser.addOption("Center Depot", robotContainer.centerDepot());
 
